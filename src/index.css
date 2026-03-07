@@ -122,118 +122,139 @@
 
 /* Light mode overrides */
 html.light {
-  --color-bg-main: #f0f2f8;
-  --color-bg-panel: #e8eaf3;
-  --color-bg-card: #ffffff;
-  --color-bg-card-hover: hsla(230, 40%, 50%, 0.06);
+  --color-bg-main: #e9ecf5;
+  --color-bg-panel: #dde1ee;
+  --color-bg-card: #f4f5fa;
+  --color-bg-card-hover: hsla(230, 40%, 40%, 0.08);
 
-  --color-border-light: rgba(99, 102, 241, 0.06);
-  --color-border-medium: rgba(99, 102, 241, 0.12);
+  --color-border-light: rgba(71, 85, 105, 0.1);
+  --color-border-medium: rgba(71, 85, 105, 0.2);
 
   --color-text-main: #0f172a;
-  --color-text-muted: #475569;
+  --color-text-muted: #334155;
 
-  --color-accent-primary: #6366f1;
-  --color-status-pass: #059669;
-  --color-status-fail: #dc2626;
-  --color-status-running: #d97706;
-  --color-status-pending: #6b7280;
-  --color-status-info: #2563eb;
+  --color-accent-primary: #4f46e5;
+  --color-status-pass: #047857;
+  --color-status-fail: #b91c1c;
+  --color-status-running: #b45309;
+  --color-status-pending: #4b5563;
+  --color-status-info: #1d4ed8;
 }
 
-/* Light mode: rich gradient background */
+/* Light mode: vivid gradient background */
 html.light body::before {
   background:
-    radial-gradient(ellipse at 0% 0%, hsla(250, 90%, 68%, 0.12), transparent 45%),
-    radial-gradient(ellipse at 100% 0%, hsla(330, 80%, 65%, 0.08), transparent 40%),
-    radial-gradient(ellipse at 80% 100%, hsla(170, 70%, 55%, 0.08), transparent 45%),
-    radial-gradient(ellipse at 20% 80%, hsla(210, 80%, 60%, 0.06), transparent 40%);
+    radial-gradient(ellipse at 0% 0%, hsla(250, 90%, 60%, 0.18), transparent 45%),
+    radial-gradient(ellipse at 100% 0%, hsla(330, 80%, 58%, 0.12), transparent 40%),
+    radial-gradient(ellipse at 80% 100%, hsla(170, 70%, 45%, 0.12), transparent 45%),
+    radial-gradient(ellipse at 20% 80%, hsla(210, 80%, 50%, 0.1), transparent 40%);
 }
 
-/* Light mode: elegant card styling with glassmorphism */
+/* Light mode: cards with frosted glass + stronger borders */
 html.light .bg-bg-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
   box-shadow:
-    0 1px 3px rgba(99, 102, 241, 0.04),
-    0 4px 16px rgba(99, 102, 241, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border-color: rgba(99, 102, 241, 0.08) !important;
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(79, 70, 229, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(71, 85, 105, 0.15) !important;
 }
 
 html.light .bg-bg-panel {
-  background: rgba(240, 242, 248, 0.9);
+  background: rgba(221, 225, 238, 0.85);
   backdrop-filter: blur(8px);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* Light mode: gradient title */
 html.light h1.bg-clip-text {
   --tw-gradient-from: #1e293b;
-  --tw-gradient-to: #6366f1;
+  --tw-gradient-to: #4f46e5;
 }
 
-/* Light mode: card hover effects */
+/* Light mode: stat card hover glow */
 html.light .hover\:-translate-y-0\.5:hover {
   box-shadow:
-    0 8px 24px rgba(99, 102, 241, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    0 8px 32px rgba(79, 70, 229, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
 }
 
-/* Light mode: header border with gradient */
+/* Light mode: header with gradient border */
 html.light header {
-  border-image: linear-gradient(90deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.1), rgba(16, 185, 129, 0.1)) 1;
+  border-image: linear-gradient(90deg, rgba(79, 70, 229, 0.25), rgba(236, 72, 153, 0.15), rgba(5, 150, 105, 0.15)) 1;
 }
 
-/* Light mode: buttons get subtle depth */
+/* Light mode: buttons with solid feel */
 html.light button {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(71, 85, 105, 0.2) !important;
 }
 
 html.light button:hover {
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 3px 12px rgba(79, 70, 229, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-/* Light mode: selected run card highlight */
+/* Light mode: selected run card */
 html.light .bg-accent-primary\/10 {
-  background: rgba(99, 102, 241, 0.08);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(99, 102, 241, 0.08) !important;
+  background: rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 4px 16px rgba(79, 70, 229, 0.1) !important;
 }
 
-/* Light mode: validation cards */
+/* Light mode: validation cards with colored left accent */
 html.light .border-status-pass {
-  box-shadow: inset 4px 0 0 -1px #059669, 0 2px 8px rgba(5, 150, 105, 0.06);
+  box-shadow: inset 4px 0 0 -1px #047857, 0 2px 10px rgba(4, 120, 87, 0.08);
 }
 
 html.light .border-status-fail {
-  box-shadow: inset 4px 0 0 -1px #dc2626, 0 2px 8px rgba(220, 38, 38, 0.06);
+  box-shadow: inset 4px 0 0 -1px #b91c1c, 0 2px 10px rgba(185, 28, 28, 0.08);
 }
 
-/* Light mode: mock data warning banner */
+/* Light mode: warning banner */
 html.light .bg-status-fail\/10 {
-  background: linear-gradient(90deg, rgba(220, 38, 38, 0.06), rgba(220, 38, 38, 0.03));
-  border-color: rgba(220, 38, 38, 0.15) !important;
+  background: linear-gradient(90deg, rgba(185, 28, 28, 0.08), rgba(185, 28, 28, 0.04));
+  border-color: rgba(185, 28, 28, 0.2) !important;
 }
 
 /* Light mode: search inputs */
 html.light .bg-bg-main {
-  background: rgba(240, 242, 248, 0.6);
+  background: rgba(233, 236, 245, 0.7);
+  border-color: rgba(71, 85, 105, 0.15) !important;
 }
 
-/* Light mode: filter tabs active glow */
+/* Light mode: filter tab glow */
 html.light .shadow-\[0_0_8px_rgba\(99\,102\,241\,0\.3\)\] {
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25) !important;
 }
 
 /* Light mode: resizer handles */
 html.light .cursor-col-resize::before {
-  background: rgba(99, 102, 241, 0.12) !important;
+  background: rgba(79, 70, 229, 0.15) !important;
 }
 html.light .cursor-col-resize:hover::before {
-  background: rgba(99, 102, 241, 0.3) !important;
+  background: rgba(79, 70, 229, 0.35) !important;
+}
+
+/* Light mode: progress bars */
+html.light .bg-border-medium {
+  background: rgba(71, 85, 105, 0.15);
+}
+
+/* Light mode: status badges stronger */
+html.light .bg-status-pass {
+  background: #047857 !important;
+}
+html.light .bg-status-fail {
+  background: #b91c1c !important;
+}
+html.light .bg-status-running {
+  background: #b45309 !important;
+}
+html.light .bg-status-pending {
+  background: #4b5563 !important;
 }
 
 /* Custom scrollbar matching original UI */
