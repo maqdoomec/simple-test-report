@@ -122,29 +122,45 @@
 
 /* Light mode overrides */
 html.light {
-  --color-bg-main: #f0f2f5;
-  --color-bg-panel: #e4e7ec;
+  --color-bg-main: #f8f9fc;
+  --color-bg-panel: #f0f1f6;
   --color-bg-card: #ffffff;
-  --color-bg-card-hover: hsla(0, 0%, 0%, 0.04);
+  --color-bg-card-hover: hsla(230, 20%, 50%, 0.06);
 
-  --color-border-light: rgba(0, 0, 0, 0.06);
-  --color-border-medium: rgba(0, 0, 0, 0.12);
+  --color-border-light: rgba(100, 116, 139, 0.08);
+  --color-border-medium: rgba(100, 116, 139, 0.18);
 
-  --color-text-main: #1e293b;
-  --color-text-muted: #64748b;
+  --color-text-main: #0f172a;
+  --color-text-muted: #475569;
 
   --color-accent-primary: #4f46e5;
   --color-status-pass: #059669;
-  --color-status-fail: #e11d48;
-  --color-status-running: #ca8a04;
-  --color-status-pending: #64748b;
+  --color-status-fail: #dc2626;
+  --color-status-running: #d97706;
+  --color-status-pending: #6b7280;
   --color-status-info: #2563eb;
 }
 
 html.light body::before {
   background:
-    radial-gradient(ellipse at 10% 20%, hsla(263, 70%, 70%, 0.1), transparent 50%),
-    radial-gradient(ellipse at 90% 80%, hsla(160, 70%, 60%, 0.08), transparent 50%);
+    radial-gradient(ellipse at 10% 20%, hsla(250, 80%, 65%, 0.06), transparent 50%),
+    radial-gradient(ellipse at 90% 80%, hsla(170, 60%, 50%, 0.05), transparent 50%);
+}
+
+html.light .bg-bg-card,
+html.light .bg-bg-panel {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Light mode: fix gradient title to be visible */
+html.light h1.bg-clip-text {
+  --tw-gradient-from: #1e293b;
+  --tw-gradient-to: #4f46e5;
+}
+
+/* Light mode: softer shadows on hover */
+html.light .hover\:shadow-md:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Custom scrollbar matching original UI */
