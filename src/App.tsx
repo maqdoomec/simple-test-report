@@ -307,6 +307,8 @@ function App() {
         togglePause={() => setIsPaused(!isPaused)}
         exportCSV={handleExportCSV}
         apiStatus={apiStatus}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
 
       {useMockData && (
