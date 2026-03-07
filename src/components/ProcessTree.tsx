@@ -60,7 +60,9 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     selectedNode,
     setSelectedNode,
     collapsedNodes,
-    toggleNodeCollapse
+    toggleNodeCollapse,
+    collapseAll,
+    expandAll
 }) => {
 
     if (!run) {
