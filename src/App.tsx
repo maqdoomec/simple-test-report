@@ -325,7 +325,7 @@ function App() {
   const effectiveLeftWidth = isRunsCollapsed ? 48 : leftWidth;
 
   return (
-    <div className="min-h-screen text-text-main flex flex-col p-2.5 gap-2.5 h-screen overflow-hidden">
+    <div className="text-text-main flex flex-col p-2.5 gap-2.5 h-screen overflow-hidden">
       <Header
         useMockData={useMockData}
         toggleMockData={handleToggleMock}
