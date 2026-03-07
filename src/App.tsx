@@ -339,7 +339,7 @@ function App() {
       />
 
       {useMockData && (
-        <div className="bg-status-fail/10 border border-status-fail/40 rounded-lg p-3 text-status-fail text-[13px] flex items-center justify-center gap-2.5 font-medium shadow-[0_4px_12px_rgba(244,63,94,0.05)]">
+        <div className="shrink-0 bg-status-fail/10 border border-status-fail/40 rounded-lg p-3 text-status-fail text-[13px] flex items-center justify-center gap-2.5 font-medium shadow-[0_4px_12px_rgba(244,63,94,0.05)]">
           <span className="text-[16px] leading-none">⚠</span> Displaying Mock Data
         </div>
       )}
