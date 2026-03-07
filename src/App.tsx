@@ -383,7 +383,7 @@ function App() {
 
       {/* Main Layout Grid */}
       <div
-        className={`grid gap-0 items-stretch transition-all duration-300 ${isStatsCollapsed ? 'h-[calc(100vh-80px)]' : 'h-[calc(100vh-160px)]'}`}
+        className="grid gap-0 items-stretch flex-1 min-h-0"
         style={{ gridTemplateColumns: `${effectiveLeftWidth}px 14px minmax(200px, 1fr) 14px ${isValidationCollapsed ? 48 : rightWidth}px`, transition: 'grid-template-columns 0.28s ease' }}
       >
         <RunList
