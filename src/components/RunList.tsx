@@ -79,7 +79,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
 
     return (
         <div
-            className={`flex flex-col min-h-0 bg-bg-card rounded-[8px] border border-border-medium overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300 ${isCollapsed ? 'cursor-pointer hover:border-text-muted hover:bg-white/5' : ''}`}
+            className={`flex flex-col min-h-0 bg-bg-card rounded-[8px] border border-border-medium h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300 ${isCollapsed ? 'cursor-pointer hover:border-text-muted hover:bg-white/5' : ''}`}
             onClick={isCollapsed ? toggleCollapse : undefined}
         >
 
@@ -169,7 +169,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
 
             {/* List (expanded only) */}
             {!isCollapsed && (
-                <div className="flex-1 overflow-y-auto p-[10px] bg-bg-card custom-scrollbar">
+                <div className="flex-1 min-h-0 overflow-y-auto p-[10px] bg-bg-card custom-scrollbar">
                     {filteredRuns.length === 0 ? (
                         <div className="flex flex-col items-center justify-center p-8 text-text-muted text-[13px] gap-3">
                             <svg className="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
