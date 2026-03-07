@@ -63,7 +63,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
 
     if (!run) {
         return (
-            <div className="flex flex-col bg-bg-card rounded-xl border border-border-medium overflow-hidden h-full shadow-lg">
+            <div className="flex flex-col min-h-0 bg-bg-card rounded-xl border border-border-medium h-full shadow-lg">
                 <div className="bg-bg-panel border-b border-border-medium p-[15px] font-semibold flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
                     <svg className="w-[18px] h-[18px] mr-2 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
