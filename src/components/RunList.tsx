@@ -79,7 +79,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
 
     return (
         <div
-            className={`flex flex-col min-h-0 bg-bg-card rounded-[8px] border border-border-medium overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300 ${isCollapsed ? 'cursor-pointer hover:border-text-muted hover:bg-white/5' : ''}`}
+            className={`flex flex-col min-h-0 bg-bg-card rounded-[8px] border border-border-medium h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300 ${isCollapsed ? 'cursor-pointer hover:border-text-muted hover:bg-white/5' : ''}`}
             onClick={isCollapsed ? toggleCollapse : undefined}
         >
 
