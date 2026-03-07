@@ -69,10 +69,10 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
     };
 
     return (
-        <div className="flex flex-col bg-bg-card rounded-[8px] border border-border-color overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300">
+        <div className="flex flex-col bg-bg-card rounded-[8px] border border-border-medium overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300">
 
             {/* Header */}
-            <div className="bg-bg-panel border-b border-border-color p-[15px] font-semibold flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.2)] shrink-0 gap-[10px]">
+            <div className="bg-bg-panel border-b border-border-medium p-[15px] font-semibold flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.2)] shrink-0 gap-[10px]">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center text-[14px]">
                         Available Runs
@@ -126,8 +126,11 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
             {/* List */}
             <div className="flex-1 overflow-y-auto p-[10px] bg-bg-card custom-scrollbar">
                 {filteredRuns.length === 0 ? (
-                    <div className="text-center p-4 text-text-muted italic text-[13px]">
-                        No execution data.
+                    <div className="flex flex-col items-center justify-center p-8 text-text-muted text-[13px] gap-3">
+                        <svg className="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <span>No execution data</span>
                     </div>
                 ) : (
                     filteredRuns.map(run => {
@@ -169,7 +172,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
                                 </div>
 
                                 {/* Progress Bar Container within card */}
-                                <div className="h-[4px] bg-border-color rounded-[2px] overflow-hidden relative z-10 w-full mt-2">
+                                <div className="h-[4px] bg-border-medium rounded-[2px] overflow-hidden relative z-10 w-full mt-2">
                                     <div
                                         className={`h-full transition-all duration-300 shadow ${run.status === 'PASS' ? 'bg-status-pass shadow-status-pass/50' :
                                             run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'
