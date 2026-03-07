@@ -52,7 +52,7 @@ const Header: FC<HeaderProps> = ({
                             : 'bg-bg-card border-border-medium hover:bg-bg-card-hover text-text-main'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                        {isPaused ? '▶ Resume' : '⏸ Paused (Mock)'}
+                        {isPaused ? '▶ Resume' : '⏸ Pause'}
                     </button>
 
                     <button
