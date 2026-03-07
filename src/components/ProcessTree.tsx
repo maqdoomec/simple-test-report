@@ -48,6 +48,8 @@ interface ProcessTreeProps {
     setSelectedNode: (node: SelectedNode) => void;
     collapsedNodes: Record<string, boolean>;
     toggleNodeCollapse: (nodeId: string) => void;
+    collapseAll: () => void;
+    expandAll: () => void;
 }
 
 const ProcessTree: FC<ProcessTreeProps> = ({
