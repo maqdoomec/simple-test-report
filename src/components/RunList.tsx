@@ -172,7 +172,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
                                 </div>
 
                                 {/* Progress Bar Container within card */}
-                                <div className="h-[4px] bg-border-color rounded-[2px] overflow-hidden relative z-10 w-full mt-2">
+                                <div className="h-[4px] bg-border-medium rounded-[2px] overflow-hidden relative z-10 w-full mt-2">
                                     <div
                                         className={`h-full transition-all duration-300 shadow ${run.status === 'PASS' ? 'bg-status-pass shadow-status-pass/50' :
                                             run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'
