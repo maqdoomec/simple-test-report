@@ -25,11 +25,8 @@ const Header: FC<HeaderProps> = ({
 }) => {
     return (
         <header className="flex justify-between items-center mb-5 pb-[15px] border-b border-border-medium flex-wrap gap-[10px]">
-            {/* Title */}
-            <h1 className="text-[22px] font-bold tracking-[0.5px] bg-clip-text text-transparent bg-linear-to-r from-[#e4e6ef] to-accent-primary flex items-center gap-2 m-0">
-                <svg className="w-5 h-5 text-text-main" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <h1 className="text-[22px] font-bold tracking-[0.5px] m-0 flex items-center gap-2 text-text-main" style={theme === 'dark' ? { background: 'linear-gradient(90deg, #e4e6ef, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}}>
+                <span style={theme === 'dark' ? { WebkitTextFillColor: 'initial', color: 'initial' } : {}}>⚡</span>
                 Tricentis Tosca Execution Dashboard
             </h1>
 
@@ -39,12 +36,12 @@ const Header: FC<HeaderProps> = ({
                 {/* API Status */}
                 <div className={`flex items-center gap-1.5 text-[12px] px-2.5 py-[5px] rounded-[20px] border ${apiStatus === 'online' ? 'border-status-pass/30' : 'border-status-fail/30'}`}>
                     <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-status-pass shadow-[0_0_6px_var(--color-status-pass)] animate-pulse-green' : 'bg-status-fail'}`}></div>
-                    <span className="text-text-main">
+                    <span className="text-text-main font-semibold">
                         {apiStatus === 'online' ? 'Live' : 'Offline'}
                     </span>
                 </div>
 
-                <span className="text-[12px] text-text-muted">Updated: {new Date().toLocaleTimeString()}</span>
+                <span className="text-[12px] text-text-muted font-medium">Updated: {new Date().toLocaleTimeString()}</span>
 
                 {/* Buttons */}
                 <div className="flex gap-2">
@@ -69,8 +66,8 @@ const Header: FC<HeaderProps> = ({
                         onClick={togglePause}
                         disabled={useMockData}
                         className={`px-[14px] py-[6px] rounded-[6px] border text-[12px] font-sans flex items-center gap-[5px] transition-all duration-200 ${isPaused
-                            ? 'bg-status-running/15 border-status-running text-status-running'
-                            : 'bg-bg-card border-border-medium hover:bg-bg-card-hover text-text-main'
+                            ? 'bg-status-running/15 border-status-running text-status-running font-semibold'
+                            : 'bg-bg-card border-border-medium hover:bg-bg-card-hover text-text-main font-semibold'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                         {isPaused ? '▶ Resume' : '⏸ Pause'}
@@ -79,8 +76,8 @@ const Header: FC<HeaderProps> = ({
                     <button
                         onClick={toggleMockData}
                         className={`px-[14px] py-[6px] rounded-[6px] border text-[12px] font-sans flex items-center gap-[5px] transition-all duration-200 cursor-pointer ${useMockData
-                                ? 'bg-status-pass/15 border-status-pass/40 text-status-pass'
-                                : 'bg-text-muted/10 border-text-muted/30 text-text-muted'
+                            ? 'bg-status-pass/15 border-status-pass/40 text-status-pass font-semibold'
+                            : 'bg-text-muted/10 border-text-muted/30 text-text-muted font-semibold'
                             }`}
                     >
                         <span className="mr-1">🧪</span> Mock: {useMockData ? 'ON' : 'OFF'}
@@ -90,14 +87,14 @@ const Header: FC<HeaderProps> = ({
                         onClick={resetTypes}
                         disabled={useMockData}
                         title="Delete all execution data and recreate base types in TDS repository"
-                        className="px-[14px] py-[6px] rounded-[6px] border bg-[#ffa000]/12 border-[#ffa000]/40 text-[#ffa000] text-[12px] font-sans flex items-center gap-[5px] hover:bg-[#ffa000]/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-[14px] py-[6px] rounded-[6px] border bg-[#ffa000]/12 border-[#ffa000]/40 text-[#b45309] dark:text-[#ffa000] text-[12px] font-sans flex items-center gap-[5px] hover:bg-[#ffa000]/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                     >
                         <span className="mr-1">↺</span> Reset Types
                     </button>
 
                     <button
                         onClick={exportCSV}
-                        className="px-[14px] py-[6px] rounded-[6px] border bg-accent-primary/15 border-accent-primary/40 text-text-main text-[12px] font-sans flex items-center gap-[5px] hover:bg-accent-primary/30 transition-all duration-200"
+                        className="px-[14px] py-[6px] rounded-[6px] border bg-accent-primary/15 border-accent-primary/40 text-text-main text-[12px] font-sans flex items-center gap-[5px] hover:bg-accent-primary/30 transition-all duration-200 font-semibold"
                     >
                         <span className="mr-1 shrink-0">⬇</span> Export CSV
                     </button>

@@ -172,34 +172,32 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                         <div key={tcId} className="mb-2">
                             {/* TestCase Row */}
                             <div
-                                className={`flex items-center p-2 rounded-md cursor-pointer transition-all duration-200 border-l-[3px] border-transparent ${isNodeSelected('tc', tcId)
-                                    ? 'bg-accent-primary/10 border-l-accent-primary shadow-[inset_0_0_10px_rgba(99,102,241,0.1)]'
-                                    : 'hover:bg-white/5 hover:border-l-border-medium'
+                                className={`flex items-center p-3 rounded-md cursor-pointer transition-all duration-200 border-l-[3px] border-transparent mb-1 ${isNodeSelected('tc', tcId)
+                                    ? 'bg-accent-primary/20 border-l-accent-primary shadow-[inset_0_0_10px_rgba(99,102,241,0.1)]'
+                                    : 'bg-white/5 hover:bg-white/10'
                                     }`}
                                 onClick={() => setSelectedNode({ type: 'tc', tcId, runId: run.run_id })}
                             >
-                                {/* Expand/Collapse Toggle */}
-                                {hasChildren ? (
-                                    <span
-                                        className="w-5 h-5 flex items-center justify-center mr-1 text-text-muted hover:text-text-main hover:bg-white/10 rounded cursor-pointer transition-colors z-10"
-                                        onClick={(e) => { e.stopPropagation(); toggleNodeCollapse(tcId); }}
-                                    >
-                                        {isCollapsed ? '▶' : '▼'}
-                                    </span>
-                                ) : (
-                                    <span className="w-5 h-5 flex items-center justify-center mr-1 text-border-medium">•</span>
-                                )}
-
                                 {/* Status Dot */}
-                                <span className={`w-2.5 h-2.5 rounded-full mr-2 shrink-0 ${tc.status === 'PASS' ? 'bg-status-pass shadow-[0_0_4px_var(--color-status-pass)]' :
+                                <span className={`w-2.5 h-2.5 rounded-full mr-3 shrink-0 ${tc.status === 'PASS' ? 'bg-status-pass shadow-[0_0_4px_var(--color-status-pass)]' :
                                     tc.status === 'FAIL' ? 'bg-status-fail shadow-[0_0_4px_var(--color-status-fail)]' :
                                         tc.status === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
                                     }`} />
 
                                 {/* Name */}
-                                <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-medium ${tc.status === 'FAIL' ? 'text-status-fail' : 'text-text-main'}`}>
-                                    {tc.testcase_name || tcId}
+                                <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-semibold ${tc.status === 'FAIL' ? 'text-status-fail' : 'text-text-main'}`}>
+                                    {tcId}: {tc.testcase_name || 'Unnamed TestCase'}
                                 </span>
+
+                                {/* Expand/Collapse (moved to right) */}
+                                {hasChildren && (
+                                    <span
+                                        className="w-5 h-5 flex items-center justify-center ml-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded cursor-pointer transition-colors z-10"
+                                        onClick={(e) => { e.stopPropagation(); toggleNodeCollapse(tcId); }}
+                                    >
+                                        {isCollapsed ? '▶' : '▼'}
+                                    </span>
+                                )}
                             </div>
 
                             {/* Processes (Children) */}

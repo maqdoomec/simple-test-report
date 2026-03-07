@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-main: #0a0a14;
-  --color-bg-panel: #151522;
-  --color-bg-card: #1e1e2d;
+  --color-bg-main: #0d0f1a;
+  --color-bg-panel: rgba(30, 30, 50, 0.85);
+  --color-bg-card: rgba(30, 30, 50, 0.85);
+  --color-bg-card-hover: rgba(36, 36, 58, 0.95);
 
-  --color-border-light: rgba(255, 255, 255, 0.05);
-  --color-border-medium: rgba(255, 255, 255, 0.1);
+  --color-border-light: #2b2b40;
+  --color-border-medium: #2b2b40;
 
-  --color-text-main: #e2e8f0;
-  --color-text-muted: #94a3b8;
+  --color-text-main: #e4e6ef;
+  --color-text-muted: #8a8eb0;
 
   --color-accent-primary: #6366f1;
-  --color-status-pass: #10b981;
-  --color-status-fail: #f43f5e;
-  --color-status-running: #eab308;
-  --color-status-pending: #64748b;
+  --color-status-pass: #50cd89;
+  --color-status-fail: #f1416c;
+  --color-status-running: #ffc700;
+  --color-status-pending: #474761;
   --color-status-info: #3b82f6;
 
   --font-sans: "Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
-  --color-bg-card-hover: hsla(0, 0%, 100%, 0.05);
   --font-mono: "Consolas", "Monaco", monospace;
 
   --animate-pulse-running: pulse-running 1.5s infinite;
@@ -77,6 +77,7 @@
       box-shadow: 0 0 10px var(--color-status-pass);
     }
   }
+
   --animate-slide-in: slide-in 0.3s ease-out;
 
   @keyframes slide-in {
@@ -84,6 +85,7 @@
       opacity: 0;
       transform: translateX(40px);
     }
+
     100% {
       opacity: 1;
       transform: translateX(0);
@@ -107,9 +109,7 @@
     content: '';
     position: fixed;
     inset: 0;
-    background:
-      radial-gradient(ellipse at 10% 20%, hsla(263, 70%, 50%, 0.08), transparent 50%),
-      radial-gradient(ellipse at 90% 80%, hsla(160, 70%, 40%, 0.06), transparent 50%);
+    background: radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, .12) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgba(80, 205, 137, .07) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -122,137 +122,172 @@
 
 /* Light mode overrides */
 html.light {
-  --color-bg-main: #e9ecf5;
-  --color-bg-panel: #dde1ee;
-  --color-bg-card: #f4f5fa;
-  --color-bg-card-hover: hsla(230, 40%, 40%, 0.08);
+  --color-bg-main: #f0f4f8;
+  --color-bg-panel: rgba(255, 255, 255, 0.5);
+  --color-bg-card: rgba(255, 255, 255, 0.85);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.95);
 
-  --color-border-light: rgba(71, 85, 105, 0.1);
-  --color-border-medium: rgba(71, 85, 105, 0.2);
+  --color-border-light: rgba(99, 102, 241, 0.15);
+  --color-border-medium: rgba(99, 102, 241, 0.3);
 
-  --color-text-main: #0f172a;
+  --color-text-main: #020617;
+  /* Very Dark Slate (almost black) for main text */
   --color-text-muted: #334155;
+  /* Dark Slate for muffled text/titles */
 
-  --color-accent-primary: #4f46e5;
-  --color-status-pass: #047857;
-  --color-status-fail: #b91c1c;
-  --color-status-running: #b45309;
-  --color-status-pending: #4b5563;
-  --color-status-info: #1d4ed8;
+  --color-accent-primary: #4338ca;
+  --color-status-pass: #059669;
+  --color-status-fail: #e11d48;
+  --color-status-running: #c2410c;
+  --color-status-pending: #334155;
+  --color-status-info: #0284c7;
 }
 
-/* Light mode: vivid gradient background */
+/* Light mode: vibrant gradient background */
 html.light body::before {
   background:
-    radial-gradient(ellipse at 0% 0%, hsla(250, 90%, 60%, 0.18), transparent 45%),
-    radial-gradient(ellipse at 100% 0%, hsla(330, 80%, 58%, 0.12), transparent 40%),
-    radial-gradient(ellipse at 80% 100%, hsla(170, 70%, 45%, 0.12), transparent 45%),
-    radial-gradient(ellipse at 20% 80%, hsla(210, 80%, 50%, 0.1), transparent 40%);
+    radial-gradient(ellipse at 0% 0%, hsla(250, 100%, 85%, 0.6), transparent 50%),
+    radial-gradient(ellipse at 100% 0%, hsla(330, 100%, 85%, 0.5), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, hsla(190, 100%, 80%, 0.6), transparent 50%),
+    radial-gradient(ellipse at 20% 80%, hsla(270, 100%, 85%, 0.5), transparent 50%),
+    linear-gradient(135deg, #eef2f6 0%, #e2e8f0 100%);
 }
 
-/* Light mode: cards with frosted glass + stronger borders */
+/* Light mode: cards with frosted glass + striking shadows */
 html.light .bg-bg-card {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(79, 70, 229, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border-color: rgba(71, 85, 105, 0.15) !important;
+    0 4px 6px -1px rgba(99, 102, 241, 0.1),
+    0 10px 15px -3px rgba(99, 102, 241, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 20px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  border-bottom-color: rgba(99, 102, 241, 0.15) !important;
+  border-right-color: rgba(99, 102, 241, 0.15) !important;
 }
 
 html.light .bg-bg-panel {
-  background: rgba(221, 225, 238, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(248, 250, 252, 0.6);
+  backdrop-filter: blur(16px);
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Light mode: gradient title */
+/* Light mode: vibrant gradient title */
 html.light h1.bg-clip-text {
   --tw-gradient-from: #1e293b;
-  --tw-gradient-to: #4f46e5;
+  --tw-gradient-to: #4338ca;
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
 }
 
 /* Light mode: stat card hover glow */
-html.light .hover\:-translate-y-0\.5:hover {
+html.light .hover\:-translate-y-0\.5:hover,
+html.light .card-hover:hover {
+  transform: translateY(-2px);
   box-shadow:
-    0 8px 32px rgba(79, 70, 229, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    0 12px 24px -4px rgba(79, 70, 229, 0.25),
+    0 4px 12px -2px rgba(0, 0, 0, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
 }
 
-/* Light mode: header with gradient border */
+/* Light mode: header with vibrant gradient border */
 html.light header {
-  border-image: linear-gradient(90deg, rgba(79, 70, 229, 0.25), rgba(236, 72, 153, 0.15), rgba(5, 150, 105, 0.15)) 1;
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #4f46e5, #ec4899, #059669) 1;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
 }
 
-/* Light mode: buttons with solid feel */
+/* Light mode: buttons with premium feel */
 html.light button {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-color: rgba(71, 85, 105, 0.2) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 html.light button:hover {
-  box-shadow: 0 3px 12px rgba(79, 70, 229, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(99, 102, 241, 0.4) !important;
 }
 
 /* Light mode: selected run card */
 html.light .bg-accent-primary\/10 {
-  background: rgba(79, 70, 229, 0.1);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), 0 4px 16px rgba(79, 70, 229, 0.1) !important;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(79, 70, 229, 0.05));
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.4), 0 4px 16px rgba(79, 70, 229, 0.15) !important;
 }
 
-/* Light mode: validation cards with colored left accent */
+/* Light mode: validation cards with vibrant colored left accent */
 html.light .border-status-pass {
-  box-shadow: inset 4px 0 0 -1px #047857, 0 2px 10px rgba(4, 120, 87, 0.08);
+  box-shadow: inset 4px 0 0 0 #059669, 0 2px 8px rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(5, 150, 105, 0.1) !important;
 }
 
 html.light .border-status-fail {
-  box-shadow: inset 4px 0 0 -1px #b91c1c, 0 2px 10px rgba(185, 28, 28, 0.08);
+  box-shadow: inset 4px 0 0 0 #e11d48, 0 2px 8px rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.1) !important;
+  background: linear-gradient(to right, rgba(225, 29, 72, 0.04), transparent);
 }
 
 /* Light mode: warning banner */
 html.light .bg-status-fail\/10 {
-  background: linear-gradient(90deg, rgba(185, 28, 28, 0.08), rgba(185, 28, 28, 0.04));
-  border-color: rgba(185, 28, 28, 0.2) !important;
+  background: linear-gradient(90deg, rgba(254, 226, 226, 0.9), rgba(254, 226, 226, 0.6));
+  border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  color: #be123c;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.1);
 }
 
 /* Light mode: search inputs */
 html.light .bg-bg-main {
-  background: rgba(233, 236, 245, 0.7);
-  border-color: rgba(71, 85, 105, 0.15) !important;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+html.light .bg-bg-main:focus-within {
+  border-color: rgba(79, 70, 229, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 /* Light mode: filter tab glow */
 html.light .shadow-\[0_0_8px_rgba\(99\,102\,241\,0\.3\)\] {
-  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25) !important;
+  box-shadow: 0 0 16px rgba(79, 70, 229, 0.4) !important;
+  background: #4f46e5 !important;
+  color: white !important;
+  border-color: #4338ca !important;
 }
 
 /* Light mode: resizer handles */
 html.light .cursor-col-resize::before {
-  background: rgba(79, 70, 229, 0.15) !important;
+  background: rgba(79, 70, 229, 0.2) !important;
 }
+
 html.light .cursor-col-resize:hover::before {
-  background: rgba(79, 70, 229, 0.35) !important;
+  background: rgba(79, 70, 229, 0.5) !important;
 }
 
 /* Light mode: progress bars */
 html.light .bg-border-medium {
-  background: rgba(71, 85, 105, 0.15);
+  background: rgba(99, 102, 241, 0.25);
 }
 
 /* Light mode: status badges stronger */
 html.light .bg-status-pass {
   background: #047857 !important;
 }
+
 html.light .bg-status-fail {
   background: #b91c1c !important;
 }
+
 html.light .bg-status-running {
   background: #b45309 !important;
 }
+
 html.light .bg-status-pending {
   background: #4b5563 !important;
 }
