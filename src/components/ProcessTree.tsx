@@ -112,6 +112,26 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                 <div className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis mr-2">
                     Process Tree
                 </div>
+                <div className="flex items-center gap-1.5 mr-2">
+                    <button
+                        onClick={expandAll}
+                        className="p-1 rounded text-text-muted hover:text-text-main hover:bg-white/10 transition-colors"
+                        title="Expand All"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7M19 4l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={collapseAll}
+                        className="p-1 rounded text-text-muted hover:text-text-main hover:bg-white/10 transition-colors"
+                        title="Collapse All"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7M5 20l7-7 7 7" />
+                        </svg>
+                    </button>
+                </div>
                 <div className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shadow shadow-black/20 ${run.status === 'PASS' || (run.status === 'FINISHED' && pct === 100 && tcFinished === tcCount && !testCases.some(t => t.status === 'FAIL')) ? 'bg-status-pass' :
                     run.status === 'FAIL' ? 'bg-status-fail' :
                         run.status === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending'
