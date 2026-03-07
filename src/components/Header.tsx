@@ -8,6 +8,8 @@ interface HeaderProps {
     togglePause: () => void;
     exportCSV: () => void;
     apiStatus: 'online' | 'offline';
+    theme: 'dark' | 'light';
+    toggleTheme: () => void;
 }
 
 const Header: FC<HeaderProps> = ({
@@ -17,7 +19,9 @@ const Header: FC<HeaderProps> = ({
     isPaused,
     togglePause,
     exportCSV,
-    apiStatus
+    apiStatus,
+    theme,
+    toggleTheme
 }) => {
     return (
         <header className="flex justify-between items-center mb-5 pb-[15px] border-b border-border-medium flex-wrap gap-[10px]">
@@ -35,7 +39,7 @@ const Header: FC<HeaderProps> = ({
                 {/* API Status */}
                 <div className={`flex items-center gap-1.5 text-[12px] px-2.5 py-[5px] rounded-[20px] border ${apiStatus === 'online' ? 'border-status-pass/30' : 'border-status-fail/30'}`}>
                     <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-status-pass shadow-[0_0_6px_var(--color-status-pass)] animate-pulse-green' : 'bg-status-fail'}`}></div>
-                    <span className={apiStatus === 'online' ? 'text-text-main' : 'text-text-main'}>
+                    <span className="text-text-main">
                         {apiStatus === 'online' ? 'Live' : 'Offline'}
                     </span>
                 </div>
@@ -44,6 +48,23 @@ const Header: FC<HeaderProps> = ({
 
                 {/* Buttons */}
                 <div className="flex gap-2">
+                    {/* Theme Toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className="px-[14px] py-[6px] rounded-[6px] border bg-bg-card border-border-medium text-text-main text-[12px] font-sans flex items-center gap-[5px] hover:bg-bg-card-hover transition-all duration-200"
+                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                        {theme === 'dark' ? (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
+
                     <button
                         onClick={togglePause}
                         disabled={useMockData}
