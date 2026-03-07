@@ -344,15 +344,26 @@ function App() {
         </div>
       )}
 
-      <StatCards
-        totalRuns={stats.total}
-        totalPassed={stats.pass}
-        totalFailed={stats.fail}
-        totalRunning={stats.running}
-        totalPending={stats.pending}
-        passRate={stats.rate}
-        passRateNum={stats.rateNum}
-      />
+      <div className="relative">
+        <button
+          onClick={() => setIsStatsCollapsed(!isStatsCollapsed)}
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-10 bg-bg-panel border border-border-medium rounded-full w-6 h-6 flex items-center justify-center text-text-muted text-[10px] cursor-pointer transition-all duration-200 hover:text-text-main hover:bg-white/10"
+          title={isStatsCollapsed ? "Show Stats" : "Hide Stats"}
+        >
+          {isStatsCollapsed ? '▼' : '▲'}
+        </button>
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] mb-5 opacity-100'}`}>
+          <StatCards
+            totalRuns={stats.total}
+            totalPassed={stats.pass}
+            totalFailed={stats.fail}
+            totalRunning={stats.running}
+            totalPending={stats.pending}
+            passRate={stats.rate}
+            passRateNum={stats.rateNum}
+          />
+        </div>
+      </div>
 
       {/* Main Layout Grid */}
       <div
