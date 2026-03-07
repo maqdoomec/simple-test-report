@@ -305,7 +305,7 @@ function App() {
     // if (selectedRunData) crumbs.push(selectedRunData.run_name || selectedRunData.run_id);
     if (selectedRunData) crumbs.push(selectedRunData.run_id);
     if (selectedNode.tcId) {
-      const tc = filteredTestCases.find(t => t.testcase_id === selectedNode.tcId);
+      
       // crumbs.push(tc?.testcase_name || selectedNode.tcId);
       crumbs.push(selectedNode.tcId);
     }
