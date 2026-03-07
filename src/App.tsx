@@ -11,6 +11,21 @@ import { mockRuns, mockTestCases, mockProcesses, mockSubProcesses, mockValidatio
 const API_BASE = 'http://localhost:3000/api';
 
 function App() {
+  // Theme State
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', theme === 'light');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
+
   // Config States
   const [useMockData, setUseMockData] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
