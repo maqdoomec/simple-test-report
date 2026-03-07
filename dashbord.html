@@ -1,0 +1,2675 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tosca Real-Time Execution Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0d0f1a;
+            --bg-card: rgba(30, 30, 50, 0.85);
+            --bg-card-hover: rgba(36, 36, 58, 0.95);
+            --text-main: #e4e6ef;
+            --text-muted: #8a8eb0;
+            --border-color: #2b2b40;
+            --status-pass: #50cd89;
+            --status-fail: #f1416c;
+            --status-running: #ffc700;
+            --status-pending: #474761;
+            --accent: #6366f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-main);
+            padding: 20px;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, .12) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgba(80, 205, 137, .07) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            background: linear-gradient(90deg, #e4e6ef, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .last-update {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* API STATUS */
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .api-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .api-live .api-dot {
+            background: var(--status-pass);
+            box-shadow: 0 0 6px var(--status-pass);
+            animation: pulse-green 2s infinite;
+        }
+
+        .api-offline .api-dot {
+            background: var(--status-fail);
+        }
+
+        .api-live {
+            border-color: rgba(80, 205, 137, .3);
+        }
+
+        .api-offline {
+            border-color: rgba(241, 65, 108, .3);
+        }
+
+        @keyframes pulse-green {
+
+            0%,
+            100% {
+                box-shadow: 0 0 4px var(--status-pass);
+            }
+
+            50% {
+                box-shadow: 0 0 10px var(--status-pass);
+            }
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .btn.paused {
+            background: rgba(255, 199, 0, .15);
+            border-color: var(--status-running);
+            color: var(--status-running);
+        }
+
+        .btn-export {
+            background: rgba(99, 102, 241, .15);
+            border-color: rgba(99, 102, 241, .4);
+        }
+
+        .btn-export:hover {
+            background: rgba(99, 102, 241, .3);
+        }
+
+        .btn-mock {
+            background: rgba(148, 163, 184, .1);
+            border-color: rgba(148, 163, 184, .3);
+            color: #94a3b8;
+        }
+
+        .btn-mock.mock-active {
+            background: rgba(16, 185, 129, .15);
+            border-color: rgba(16, 185, 129, .4);
+            color: #10b981;
+        }
+
+        .btn-reset {
+            background: rgba(255, 160, 0, .12);
+            border-color: rgba(255, 160, 0, .4);
+            color: #ffa000;
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background: rgba(255, 160, 0, .25);
+        }
+
+        .btn-reset:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* SUMMARY CARDS */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform .2s, box-shadow .2s;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity .3s;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, .05), transparent);
+        }
+
+        .summary-card:hover::before {
+            opacity: 1;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+        }
+
+        .summary-title {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .val-total {
+            color: var(--text-main);
+        }
+
+        .val-pass {
+            color: var(--status-pass);
+        }
+
+        .val-fail {
+            color: var(--status-fail);
+        }
+
+        .val-running {
+            color: var(--status-running);
+        }
+
+        .val-pending {
+            color: var(--status-pending);
+        }
+
+        .val-rate {
+            color: var(--accent);
+        }
+
+        /* DONUT CHART */
+        .donut-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .donut-chart {
+            width: 80px;
+            height: 80px;
+        }
+
+        .donut-chart circle {
+            fill: none;
+            stroke-width: 10;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dasharray .6s ease;
+        }
+
+        .donut-bg {
+            stroke: var(--border-color);
+        }
+
+        .donut-pass {
+            stroke: var(--status-pass);
+        }
+
+        .donut-fail {
+            stroke: var(--status-fail);
+        }
+
+        .donut-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* MAIN GRID */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 220px 14px minmax(200px, 1fr) 14px 480px;
+            gap: 0;
+            align-items: start;
+            transition: grid-template-columns 0.28s ease;
+        }
+
+        .phase-title span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .resizer {
+            width: 14px;
+            cursor: col-resize;
+            position: relative;
+            background: transparent;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* divider line */
+        .resizer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+            transition: background .2s, box-shadow .2s;
+        }
+
+        /* hover glow */
+        .resizer:hover::before {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        /* VSCode drag dots */
+        .resizer::after {
+            content: "⋮";
+            font-size: 14px;
+            color: var(--text-muted);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .resizer:hover::after {
+            opacity: 0.9;
+        }
+
+        body.resizing {
+            cursor: col-resize;
+            user-select: none;
+        }
+
+        @media(max-width:900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .resizer {
+                display: none;
+            }
+
+            .validation-panel,
+            .runs-panel {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        /* RUNS PANEL SIDEBAR */
+        .runs-panel {
+            min-width: 0;
+            transition: width 0.28s ease, min-width 0.28s ease, padding 0.28s ease;
+            overflow: hidden;
+            padding: 14px 12px;
+        }
+
+        /* VALIDATION PANEL (RIGHT COLLAPSIBLE) */
+
+        .validation-panel {
+            min-width: 0;
+            transition: width .28s ease, min-width .28s ease, padding .28s ease;
+            overflow: hidden;
+        }
+
+        .validation-panel.collapsed {
+            width: 48px;
+            min-width: 48px;
+            padding: 12px 4px;
+        }
+
+        .validation-panel.collapsed .validation-stream,
+        .validation-panel.collapsed #val-breadcrumb,
+        .validation-panel.collapsed span {
+            display: none;
+        }
+
+        .validation-panel.collapsed .card-header {
+            justify-content: center;
+        }
+
+        .validation-panel.collapsed .validation-collapse-btn {
+            font-size: 12px;
+        }
+
+        .validation-collapse-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .runs-panel.collapsed {
+            width: 48px;
+            min-width: 48px;
+            padding: 12px 4px;
+        }
+
+        .runs-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .runs-panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text-muted);
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        .runs-panel.collapsed .runs-panel-title,
+        .runs-panel.collapsed .runs-search-wrap {
+            display: none;
+
+        }
+
+        .runs-collapse-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 10px;
+            flex-shrink: 0;
+            transition: transform 0.28s ease;
+        }
+
+        .runs-panel.collapsed .runs-collapse-btn {
+            transform: rotate(180deg);
+        }
+
+        .runs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            max-height: 520px;
+        }
+
+        /* RUN ITEM CARD */
+        .run-item {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 9px 10px;
+            cursor: pointer;
+            transition: background .18s, border-color .18s, box-shadow .18s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .run-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        .run-item {
+            position: relative;
+        }
+
+        .run-item.run-selected {
+            background: rgba(99, 102, 241, .12);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, .35);
+        }
+
+        .run-item-top {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 5px;
+        }
+
+        .run-id-label {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .run-item-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+        }
+
+        .run-item-counts {
+            display: flex;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .run-item-prog {
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border-color);
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .run-item-prog-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width .5s;
+        }
+
+        /* Collapsed sidebar: show only status dot */
+        .runs-panel.collapsed .run-item {
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .runs-panel.collapsed .run-item {
+            position: relative;
+        }
+
+        .runs-panel.collapsed .run-item:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 52px;
+            background: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .runs-list {
+            position: relative;
+        }
+
+        .runs-panel.collapsed .status-dot {
+            width: 12px;
+            height: 12px;
+        }
+
+        .runs-panel.collapsed .run-id-label,
+        .runs-panel.collapsed .run-item-meta,
+        .runs-panel.collapsed .run-item-counts,
+        .runs-panel.collapsed .run-item-prog {
+            display: none;
+        }
+
+        .runs-panel.collapsed .runs-panel-header {
+            justify-content: center;
+        }
+
+        /* COMPACT MONITOR STRIP */
+        .monitor-compact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, .2);
+            border-radius: 7px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            flex-wrap: nowrap;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        #mon-runid,
+        #mon-testcase,
+        #mon-process {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+        /* CARD */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            max-height: 620px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .card-header {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .card-header span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* PROGRESS BAR */
+        .progress-container {
+            width: 100%;
+            background: rgba(71, 71, 97, .4);
+            border-radius: 6px;
+            height: 10px;
+            margin: 12px 0;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width .5s ease, background-color .5s;
+        }
+
+        .progress-bar.running-bar {
+            background: linear-gradient(90deg, var(--status-running), #ff9900, var(--status-running));
+            background-size: 200% 100%;
+            animation: shimmer 1.5s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% center;
+            }
+
+            100% {
+                background-position: -200% center;
+            }
+        }
+
+        .progress-bar.pass-bar {
+            background: var(--status-pass);
+        }
+
+        .progress-bar.fail-bar {
+            background: var(--status-fail);
+        }
+
+        .monitor-details {
+            margin-bottom: 14px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        .monitor-details span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* PHASE TREE */
+        #phase-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 4px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .phase-tree {
+            list-style: none;
+            margin-top: 6px;
+        }
+
+        .phase-item {
+            margin-bottom: 10px;
+        }
+
+        .phase-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 0;
+            gap: 6px;
+        }
+
+        .phase-title:hover {
+            color: #fff;
+        }
+
+        .phase-chevron {
+            font-size: 10px;
+            transition: transform .2s;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .phase-collapsed .phase-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .substep-list {
+            list-style: none;
+            padding-left: 18px;
+            border-left: 1px dashed var(--border-color);
+            margin-left: 5px;
+            overflow: hidden;
+            transition: max-height .3s ease;
+        }
+
+        .substep-list.collapsed {
+            max-height: 0;
+        }
+
+        .substep-item {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .substep-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .status-PASS {
+            background: var(--status-pass);
+            box-shadow: 0 0 4px var(--status-pass);
+        }
+
+        .status-FAIL {
+            background: var(--status-fail);
+            box-shadow: 0 0 4px var(--status-fail);
+        }
+
+        .status-PENDING {
+            background: var(--status-pending);
+        }
+
+        .status-RUNNING {
+            background: var(--status-running);
+            box-shadow: 0 0 8px var(--status-running);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(.9);
+                box-shadow: 0 0 0 0 rgba(255, 199, 0, .7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(255, 199, 0, 0);
+            }
+
+            100% {
+                transform: scale(.9);
+                box-shadow: 0 0 0 0 rgba(255, 199, 0, 0);
+            }
+        }
+
+        /* VALIDATION STREAM */
+        .validation-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .validation-item {
+            background: rgba(0, 0, 0, .25);
+            border-left: 3px solid var(--status-pending);
+            padding: 10px;
+            border-radius: 0 6px 6px 0;
+            font-size: 12px;
+            animation: slide-in .3s ease;
+        }
+
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .val-item-PASS {
+            border-left-color: var(--status-pass);
+        }
+
+        .val-item-FAIL {
+            border-left-color: var(--status-fail);
+            background: rgba(241, 65, 108, .08);
+        }
+
+        .val-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .val-details {
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .expected {
+            color: #89b4fa;
+        }
+
+        .actual-pass {
+            color: var(--status-pass);
+        }
+
+        .actual-fail {
+            color: var(--status-fail);
+        }
+
+        /* QUEUE CARD */
+        .queue-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 120px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, .3);
+            color: var(--text-main);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .tab {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        .tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .tab-PASS.active {
+            background: var(--status-pass);
+            border-color: var(--status-pass);
+            color: #000;
+        }
+
+        .tab-FAIL.active {
+            background: var(--status-fail);
+            border-color: var(--status-fail);
+        }
+
+        .tab-RUNNING.active {
+            background: var(--status-running);
+            border-color: var(--status-running);
+            color: #000;
+        }
+
+        /* TABLE */
+        .table-wrap {
+            overflow: auto;
+            flex-grow: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 360px;
+        }
+
+        th,
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10px;
+            cursor: default;
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 1;
+        }
+
+        tr.queue-row {
+            transition: background-color .2s;
+            cursor: pointer;
+            outline: none;
+        }
+
+        tr.queue-row:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tr.queue-row:focus {
+            outline: 1px solid var(--accent);
+        }
+
+        tr.selected-row {
+            background: rgba(99, 102, 241, .1);
+            outline: 1px solid rgba(99, 102, 241, .5);
+        }
+
+        .badge {
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .badge-PASS {
+            background: var(--status-pass);
+            color: #000;
+        }
+
+        .badge-FAIL {
+            background: var(--status-fail);
+        }
+
+        .badge-RUNNING {
+            background: var(--status-running);
+            color: #000;
+            animation: blink-running 1.2s ease-in-out infinite;
+        }
+
+        .badge-PENDING {
+            background: var(--status-pending);
+        }
+
+        @keyframes blink-running {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        /* TREE NODE SELECTION */
+        .tree-node-selected {
+            background: rgba(99, 102, 241, .18) !important;
+            border-left: 3px solid var(--accent) !important;
+            border-radius: 5px !important;
+            padding-left: 6px !important;
+        }
+
+        /* BREADCRUMB */
+        #val-breadcrumb {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 5px 8px;
+            margin-bottom: 8px;
+            background: rgba(99, 102, 241, .08);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .crumb {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .crumb-sep {
+            color: var(--text-muted);
+        }
+
+        /* TOAST */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 9999;
+        }
+
+        .toast {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(30, 30, 50, .95);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 13px;
+            backdrop-filter: blur(12px);
+            animation: toast-in .3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+        }
+
+        .toast-PASS {
+            border-left: 3px solid var(--status-pass);
+        }
+
+        .toast-FAIL {
+            border-left: 3px solid var(--status-fail);
+        }
+
+        .toast-RUNNING {
+            border-left: 3px solid var(--status-running);
+        }
+
+        .toast-info {
+            border-left: 3px solid var(--accent);
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+        }
+
+        .toast.removing {
+            animation: toast-out .3s ease forwards;
+        }
+
+        .tree-node-selected {
+            animation: nodeHighlight 0.25s ease;
+        }
+
+        @keyframes nodeHighlight {
+            from {
+                background: rgba(99, 102, 241, .35);
+            }
+
+            to {
+                background: rgba(99, 102, 241, .18);
+            }
+        }
+
+        /* ERROR BANNER */
+        #error-banner {
+            display: none;
+            background: rgba(241, 65, 108, .12);
+            border: 1px solid rgba(241, 65, 108, .4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--status-fail);
+            align-items: center;
+            gap: 10px;
+        }
+
+        #error-banner.visible {
+            display: flex;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toast-container"></div>
+
+    <header>
+        <h1>⚡ Tricentis Tosca Execution Dashboard</h1>
+        <div class="header-right">
+            <div class="api-status api-offline" id="api-status-indicator">
+                <div class="api-dot"></div>
+                <span id="api-status-text">Offline (Mock)</span>
+            </div>
+            <div class="last-update">Updated: <span id="time-display">--:--:--</span></div>
+            <div class="controls">
+                <button class="btn" id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+                <button class="btn btn-mock" id="mock-btn" onclick="toggleMockData()"
+                    title="Toggle between mock data and live API">🧪 Mock: OFF</button>
+                <button class="btn btn-reset" id="reset-btn" onclick="resetTypes()"
+                    title="Delete all required TDS types and re-create them">↺ Reset Types</button>
+                <button class="btn btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="error-banner">
+        ⚠ <span id="error-text">API unreachable.</span>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card" title="Total test runs loaded">
+            <div class="summary-title">Total Runs</div>
+            <div class="summary-value val-total" id="count-total">0</div>
+        </div>
+        <div class="summary-card" title="Runs that completed successfully">
+            <div class="summary-title">Passed</div>
+            <div class="summary-value val-pass" id="count-pass">0</div>
+        </div>
+        <div class="summary-card" title="Runs that encountered failures">
+            <div class="summary-title">Failed</div>
+            <div class="summary-value val-fail" id="count-fail">0</div>
+        </div>
+        <div class="summary-card" title="Runs currently executing">
+            <div class="summary-title">Running</div>
+            <div class="summary-value val-running" id="count-running">0</div>
+        </div>
+        <div class="summary-card" title="Runs not yet started">
+            <div class="summary-title">Pending</div>
+            <div class="summary-value val-pending" id="count-pending">0</div>
+        </div>
+        <div class="summary-card" title="Pass rate = Passed / (Passed + Failed)">
+            <div class="summary-title">Pass Rate</div>
+            <div class="donut-wrap">
+                <svg class="donut-chart" viewBox="0 0 36 36">
+                    <circle class="donut-bg" cx="18" cy="18" r="13" />
+                    <circle class="donut-fail" cx="18" cy="18" r="13" id="donut-fail-arc" stroke-dasharray="0 82" />
+                    <circle class="donut-pass" cx="18" cy="18" r="13" id="donut-pass-arc" stroke-dasharray="0 82" />
+                </svg>
+                <div class="donut-label val-rate" id="count-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-grid" id="main-grid">
+
+        <!-- ① RUNS PANEL (collapsible sidebar) -->
+        <div class="card runs-panel" id="runs-panel">
+            <div class="runs-panel-header">
+                <span class="runs-panel-title" id="runs-panel-title">Runs</span>
+                <button class="runs-collapse-btn" id="runs-collapse-btn" title="Collapse panel"
+                    onclick="toggleRunsPanel()">◀</button>
+            </div>
+            <div class="runs-search-wrap" id="runs-search-wrap">
+                <input class="search-box" id="queue-search" type="text" placeholder="Search…" oninput="renderUI()">
+                <div class="filter-tabs" id="runs-filter-tabs" style="margin-top:6px;flex-wrap:wrap;">
+                    <button class="tab active" onclick="setFilter(this,'ALL')">All</button>
+                    <button class="tab tab-RUNNING" onclick="setFilter(this,'RUNNING')">▶</button>
+                    <button class="tab tab-FAIL" onclick="setFilter(this,'FAIL')">✕</button>
+                    <button class="tab tab-PASS" onclick="setFilter(this,'PASS')">✓</button>
+                </div>
+            </div>
+            <div class="runs-list" id="runs-list"></div>
+        </div>
+
+        <div class="resizer" id="resize-left"></div>
+
+        <!-- ② PROCESS TREE (middle) -->
+        <div class="card">
+            <div class="card-header">
+                <span title="Process Tree">Process Tree</span>
+                <span id="monitor-badge" class="badge badge-PENDING" style="margin-left:8px;flex-shrink:0;">IDLE</span>
+            </div>
+            <div class="monitor-compact" id="monitor-compact">
+                <span id="mon-runid" style="font-weight:700;color:var(--status-running);flex-shrink:0;">--</span>
+                <span id="mon-testcase" style="color:var(--text-muted);font-size:12px;"></span>
+                <span id="mon-process" style="margin-left:auto;font-size:11px;color:var(--text-muted);"></span>
+            </div>
+            <div
+                style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:2px;">
+                <span>SubProcess Progress</span><span id="mon-progress-text">0%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="mon-progress" style="width:0%;"></div>
+            </div>
+            <div id="phase-container" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="resizer" id="resize-right"></div>
+
+        <!-- ③ VALIDATION STREAM (right) -->
+        <div class="card validation-panel" id="validation-panel">
+            <div class="card-header">
+                <button class="validation-collapse-btn" id="validation-toggle"
+                    onclick="toggleValidationPanel()">▶</button>
+
+                <span style="flex:1;text-align:center;">Validation Stream</span>
+
+                <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(Auto)</span>
+            </div>
+            <div id="val-breadcrumb" style="display:none;"></div>
+            <div class="validation-stream" id="validation-container"></div>
+        </div>
+
+    </div>
+
+
+    <script>
+        // ---- UI CONFIGURATION ----
+        const UI_CONFIG = {
+            panelWidths: {
+                leftMin: 140,
+                leftMax: 420,
+                leftDefault: 220,
+                rightMin: 220,
+                rightMax: 720,
+                rightDefault: 480,
+                centerMin: 400,
+                collapsed: 48
+            },
+            timing: {
+                dataRefreshRateMs: 3000,
+                toastDurationMs: 4000,
+                apiTimeoutMs: 5000,
+                toastAnimationMs: 300
+            },
+            limits: {
+                maxRunsInList: 100,
+                maxValidationsInStream: 500
+            },
+            api: {
+                host: "https://usdltosca.prod.laitram.loc",
+                repo: "data",
+                version: "2",
+                clientId: "Kl3At5uwwUmLWnN1IMvPlw",
+                clientSecret: "9LprxA_rYEC7vVsqosMwOAdN-nsVU9BEGtUYF2xl4qqA",
+                tokenEndpoint: "/connect/token",
+                types: {
+                    runs: 'ExecutionRuns',
+                    testCases: 'TestCases',
+                    processes: 'RunProcesses',
+                    subProcesses: 'RunSubProcesses',
+                    validations: 'RunValidations'
+                }
+            }
+        };
+
+        // ---- TDS SERVER CONFIGURATION ----
+        const BASE_URL = `${UI_CONFIG.api.host}/TestDataService/v${UI_CONFIG.api.version}/repositories/${UI_CONFIG.api.repo}/types`;
+        const { runs: T_RUNS, testCases: T_TC, processes: T_PROC, subProcesses: T_SP, validations: T_VAL } = UI_CONFIG.api.types;
+        const API_RUNS = `${BASE_URL}/${T_RUNS}/items`;
+        const API_TESTCASES = `${BASE_URL}/${T_TC}/items`;
+        const API_PROCESSES = `${BASE_URL}/${T_PROC}/items`;
+        const API_SUBPROCESSES = `${BASE_URL}/${T_SP}/items`;
+        const API_VALIDATIONS = `${BASE_URL}/${T_VAL}/items`;
+
+        // ---- GLOBAL STATE ----
+        let useMockData = false; // toggled at runtime via the Mock toggle button
+        let globalRuns = [], globalTestCases = [], globalProcesses = [];
+        let globalSubProcesses = [], globalValidations = [];
+        let selectedRunId = null;
+        let activeFilter = 'ALL';
+        let isPaused = false;
+        let prevStatuses = {};
+        let focusedRowIndex = -1;
+        // selectedNode tracks the active tree node for contextual validations:
+        // { type:'tc'|'proc'|'sp', tcId, procId, spId, runId }
+        let selectedNode = null;
+        let lastRunStatusSnapshot = "";
+        let lastValidationCount = 0;
+
+        const collapsedNodes = {}; // persists expand/collapse state across re-renders
+
+        // ============================================================
+        // MOCK DATA — flat key-value records (no nested objects)
+        // Hierarchy: Run → TestCase → Process → SubProcess → Validation
+        // ============================================================
+
+        const mockRuns = [
+            { data: { run_id: 'RUN-1001', run_name: 'E2E_OrderToInvoice _Regression', status: 'RUNNING', start_time: '20231024090000', end_time: "" } },
+            { data: { run_id: 'RUN-1002', run_name: 'Retail_Shipping_Full_Suite', status: 'FAIL', start_time: '20231024083000', end_time: '20231024091500' } },
+            { data: { run_id: 'RUN-1003', run_name: 'BOM_Dashboard_Smoke', status: 'PASS', start_time: '20231024080000', end_time: '20231024080500' } },
+            { data: { run_id: 'RUN-1004', run_name: 'Pre_Conditions_Baseline', status: 'PENDING', start_time: "", end_time: "" } }
+        ];
+
+        const mockTestCases = [
+            { data: { run_id: 'RUN-1001', testcase_id: 'TC-101', testcase_name: 'Environment Cleanup', status: 'PASS', start_time: '20231024090000', end_time: '20231024090100' } },
+            { data: { run_id: 'RUN-1001', testcase_id: 'TC-102', testcase_name: 'Create Customer Profile', status: 'RUNNING', start_time: '20231024090100', end_time: "" } },
+            { data: { run_id: 'RUN-1002', testcase_id: 'TC-201', testcase_name: 'Verify API Sync', status: 'FAIL', start_time: '20231024083000', end_time: '20231024083200' } },
+            { data: { run_id: 'RUN-1002', testcase_id: 'TC-202', testcase_name: 'Login via SSO', status: 'PASS', start_time: '20231024083200', end_time: '20231024083230' } },
+            // RUN-1003
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", testcase_name: "BOM_Visualizer_Load_Test", status: "PASS", start_time: '20231024080005', end_time: '20231024080516' } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-302", testcase_name: "Assembly_Dashboard_Smoke", status: "PASS", start_time: '20231024080517', end_time: '20231024081005' } }
+        ];
+
+        const mockProcesses = [
+            // TC-101 (RUNNING)
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-001", process_name: "Pre-Conditions", status: "PASS" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-002", process_name: "Book Order", status: "RUNNING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-003", process_name: "Dashboards & BOM", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-004", process_name: "Post Order Process", status: "PENDING" } },
+            // TC-201 (FAIL)
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-011", process_name: "Pre-Conditions", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-012", process_name: "Book Order", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-013", process_name: "Dashboards & BOM", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-014", process_name: "Post Order Process", status: "FAIL" } },
+            // TC-301 (PASS)
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-021", process_name: "Pre-Conditions", status: "PASS" } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-022", process_name: "Dashboards & BOM", status: "PASS" } }
+        ];
+
+        const mockSubProcesses = [
+            // P-001 Pre-Conditions (PASS)
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-001", subprocess_id: "SP-001", subprocess_name: "Environment Cleanup", status: "PASS" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-001", subprocess_id: "SP-002", subprocess_name: "Data Setup", status: "PASS" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-001", subprocess_id: "SP-003", subprocess_name: "Login", status: "PASS" } },
+            // P-002 Book Order (RUNNING)
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-004", subprocess_name: "Order Creation", status: "PASS" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-005", subprocess_name: "Belt Configuration", status: "RUNNING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-006", subprocess_name: "Validation & Booking", status: "PENDING" } },
+            // P-003 (PENDING — no subprocesses started)
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-003", subprocess_id: "SP-007", subprocess_name: "BOM Visualizer", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-003", subprocess_id: "SP-008", subprocess_name: "Assembly Dashboard", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-003", subprocess_id: "SP-009", subprocess_name: "Shipping Dashboard", status: "PENDING" } },
+            // P-004 (PENDING)
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-004", subprocess_id: "SP-010", subprocess_name: "Material Transactions", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-004", subprocess_id: "SP-011", subprocess_name: "Move Transactions", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-004", subprocess_id: "SP-012", subprocess_name: "Kewill Shipping", status: "PENDING" } },
+            { data: { run_id: "RUN-1001", testcase_id: "TC-101", process_id: "P-004", subprocess_id: "SP-013", subprocess_name: "Auto-Invoice Gen", status: "PENDING" } },
+            // RUN-1002 / TC-201 — FAIL path
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-011", subprocess_id: "SP-101", subprocess_name: "Environment Cleanup", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-011", subprocess_id: "SP-102", subprocess_name: "Data Setup", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-011", subprocess_id: "SP-103", subprocess_name: "Login", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-012", subprocess_id: "SP-104", subprocess_name: "Order Creation", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-012", subprocess_id: "SP-105", subprocess_name: "Belt Configuration", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-012", subprocess_id: "SP-106", subprocess_name: "Validation & Booking", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-013", subprocess_id: "SP-107", subprocess_name: "BOM Visualizer", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-013", subprocess_id: "SP-108", subprocess_name: "Assembly Dashboard", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-013", subprocess_id: "SP-109", subprocess_name: "Shipping Dashboard", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-014", subprocess_id: "SP-110", subprocess_name: "Material Transactions", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-014", subprocess_id: "SP-111", subprocess_name: "Move Transactions", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-014", subprocess_id: "SP-112", subprocess_name: "Kewill Shipping", status: "PASS" } },
+            { data: { run_id: "RUN-1002", testcase_id: "TC-201", process_id: "P-014", subprocess_id: "SP-113", subprocess_name: "Auto-Invoice Gen", status: "FAIL" } },
+            // RUN-1003 — all PASS
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-021", subprocess_id: "SP-201", subprocess_name: "Environment Cleanup", status: "PASS" } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-021", subprocess_id: "SP-202", subprocess_name: "Data Setup", status: "PASS" } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-021", subprocess_id: "SP-203", subprocess_name: "Login", status: "PASS" } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-022", subprocess_id: "SP-204", subprocess_name: "BOM Visualizer", status: "PASS" } },
+            { data: { run_id: "RUN-1003", testcase_id: "TC-301", process_id: "P-022", subprocess_id: "SP-205", subprocess_name: "Assembly Dashboard", status: "PASS" } }
+        ];
+
+        const mockValidations = [
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-001", subprocess_id: "SP-003",
+                    validation_id: 'VAL-001', status: 'PASS', timestamp: '20231024100211',
+                    message: 'Login Success', Expected: 'Logged In', Actual: 'Logged In'
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-004",
+                    validation_id: 'VAL-002', status: 'PASS', timestamp: '20231024100834',
+                    message: 'Order Number != Null', Expected: '!= Null', Actual: 'ORD-884421'
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-005",
+                    validation_id: 'VAL-003', status: 'PASS', timestamp: '20231024100955',
+                    message: 'Belt SKU Match', Expected: 'SKU-7792', Actual: 'SKU-7792'
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-002", subprocess_id: "SP-005",
+                    validation_id: 'VAL-004', status: 'FAIL', timestamp: '20231024101102',
+                    message: 'Invoice Total Mismatch', Expected: '$1,240.50', Actual: '$1,240.00',
+                    Difference: '-$0.50'
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-003", subprocess_id: "SP-006",
+                    validation_id: 'VAL-005', status: 'info', timestamp: '20231024101115',
+                    message: 'Retrying Invoice Fetch...', Expected: 'Attempt 2 of 3', Actual: ''
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1001', testcase_id: "TC-101", process_id: "P-003", subprocess_id: "SP-006",
+                    validation_id: 'VAL-006', status: 'FAIL', timestamp: '20231024101145',
+                    message: 'Engine Timeout', Expected: '#invoice-table visible', Actual: 'Failed to locate element after 30000ms'
+                }
+            },
+            {
+                data: {
+                    run_id: 'RUN-1002', testcase_id: "TC-201", process_id: "P-014", subprocess_id: "SP-110",
+                    validation_id: 'VAL-101', status: 'FAIL', timestamp: '20231024083100',
+                    message: 'API Sync Error', Expected: 'status 200', Actual: 'status 500'
+                }
+            }
+        ];
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            const icon = { PASS: '✅', FAIL: '❌', RUNNING: '🔄', info: 'ℹ️' }[type] || 'ℹ️';
+            t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+            c.appendChild(t);
+            setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), UI_CONFIG.timing.toastAnimationMs); }, UI_CONFIG.timing.toastDurationMs);
+        }
+
+        function setFilter(el, val) {
+            activeFilter = val;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderUI();
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pause-btn');
+            btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+            btn.classList.toggle('paused', isPaused);
+            showToast(isPaused ? 'Live polling paused' : 'Live polling resumed', 'info');
+        }
+
+        function toggleMockData() {
+            useMockData = !useMockData;
+            const btn = document.getElementById('mock-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+
+            btn.textContent = useMockData ? '\ud83e\uddea Mock: ON' : '\ud83e\uddea Mock: OFF';
+            btn.classList.toggle('mock-active', useMockData);
+
+            if (useMockData) {
+                setApiStatus(false, 'Mock Mode active \u2014 not using live API');
+                // Force pause when mock is active
+                isPaused = true;
+                pauseBtn.textContent = '⏸ Paused (Mock)';
+                pauseBtn.classList.add('paused');
+                pauseBtn.disabled = true;
+            } else {
+                setApiStatus(true); // will be overwritten by next fetch
+                // Resume live polling when mock is disabled
+                isPaused = false;
+                pauseBtn.textContent = '⏸ Pause';
+                pauseBtn.classList.remove('paused');
+                pauseBtn.disabled = false;
+            }
+
+            showToast(useMockData ? 'Mock data ON' : 'Live API mode ON', useMockData ? 'PENDING' : 'PASS');
+            fetchExecutionData(false, true); // true = force bypass isPaused
+        }
+
+        async function resetTypes() {
+            if (useMockData) {
+                showToast('Reset skipped — Mock Mode is enabled', 'PENDING');
+                return;
+            }
+            const btn = document.getElementById('reset-btn');
+            btn.disabled = true;
+            btn.textContent = '↺ Resetting…';
+            try {
+                const { host, repo, version } = UI_CONFIG.api;
+                const typesBase = `${host}/TestDataService/v${version}/repositories/${repo}/types`;
+                const token = await fetchToken();
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                };
+
+                // 1) Delete all required types
+                showToast(`Deleting ${REQUIRED_TYPES.length} type(s)…`, 'PENDING');
+                const delResults = await Promise.all(REQUIRED_TYPES.map(async typeName => {
+                    try {
+                        const res = await fetch(`${typesBase}/${typeName}`, { method: 'DELETE', headers });
+                        return { typeName, ok: res.ok || res.status === 200 || res.status === 404 };
+                    } catch (e) {
+                        return { typeName, ok: false, err: e.message };
+                    }
+                }));
+                const delFailed = delResults.filter(r => !r.ok);
+                if (delFailed.length) {
+                    const names = delFailed.map(r => r.typeName).join(', ');
+                    showToast(`Reset: delete failed for: ${names}`, 'FAIL');
+                    return;
+                }
+
+                // 2) Re-create all types
+                showToast(`Creating ${REQUIRED_TYPES.length} type(s)…`, 'PENDING');
+                const createResults = await Promise.all(REQUIRED_TYPES.map(async typeName => {
+                    try {
+                        const res = await fetch(typesBase, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({ name: typeName })
+                        });
+                        return { typeName, ok: res.ok || res.status === 200 };
+                    } catch (e) {
+                        return { typeName, ok: false };
+                    }
+                }));
+                const createFailed = createResults.filter(r => !r.ok);
+                if (createFailed.length) {
+                    showToast(`Reset: create failed for: ${createFailed.map(r => r.typeName).join(', ')}`, 'FAIL');
+                } else {
+                    showToast(`Reset complete \u2014 ${REQUIRED_TYPES.length} type(s) recreated \u2713`, 'PASS');
+
+                    // Clear all local UI state so the dashboard correctly empties out
+                    globalRuns = [];
+                    globalTestCases = [];
+                    globalProcesses = [];
+                    globalSubProcesses = [];
+                    globalValidations = [];
+                    selectedRunId = null;
+                    selectedNode = null;
+                    document.getElementById('phase-container').innerHTML = '<div class="empty-state">Select a run to inspect</div>';
+
+                    renderUI();
+                }
+            } catch (e) {
+                showToast(`Reset failed: ${e.message}`, 'FAIL');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '↺ Reset Types';
+            }
+        }
+
+        function exportCSV() {
+            const rows = [['Run ID', 'Run Name', 'Status', 'TC Count', 'SubProcess Progress']];
+            globalRuns.forEach(item => {
+                const d = item.data;
+                const tcCount = globalTestCases.filter(t => t.data.run_id === d.run_id).length;
+                const pct = calcRunProgress(d.run_id);
+                rows.push([d.run_id, d.run_name, d.status, tcCount, pct + '%']);
+            });
+            const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+            a.download = `tosca-runs-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            showToast('CSV exported', 'info');
+        }
+
+        // Progress = SubProcesses done (PASS|FAIL) / total for this run
+        function calcRunProgress(runId) {
+            const subs = globalSubProcesses.filter(s => s.data.run_id === runId);
+            if (!subs.length) return 0;
+            const done = subs.filter(s => s.data.status === 'PASS' || s.data.status === 'FAIL' || s.data.status === 'FINISHED').length;
+            return Math.round(done / subs.length * 100);
+        }
+
+        function setApiStatus(live, errorMsg = 'API unreachable.') {
+            const el = document.getElementById('api-status-indicator');
+            const txt = document.getElementById('api-status-text');
+            el.className = `api-status ${live ? 'api-live' : 'api-offline'}`;
+            txt.textContent = live ? 'Live' : 'Offline';
+            const banner = document.getElementById('error-banner');
+            if (!live && errorMsg) {
+                banner.classList.add('visible');
+                document.getElementById('error-text').textContent = errorMsg;
+            } else {
+                banner.classList.remove('visible');
+            }
+        }
+
+        let accessToken = null;
+        let tokenExpiry = 0;
+
+        async function fetchToken() {
+            if (accessToken && Date.now() < tokenExpiry) {
+                return accessToken;
+            }
+
+            const url = `${UI_CONFIG.api.host}${UI_CONFIG.api.tokenEndpoint}`;
+            const credentials = btoa(`${UI_CONFIG.api.clientId}:${UI_CONFIG.api.clientSecret}`);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'grant_type': 'client_credentials'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Token fetch failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            accessToken = data.access_token;
+
+            try {
+                // Decode the JWT to read the exact 'exp' claim (expiration time in seconds)
+                const base64Url = accessToken.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const jwtData = JSON.parse(jsonPayload);
+                if (jwtData.exp) {
+                    // Set expiry to exact unix timestamp minus a 60 second safety buffer
+                    tokenExpiry = (jwtData.exp - 60) * 1000;
+                } else {
+                    // Fallback to 1 hour if 'exp' is missing
+                    tokenExpiry = Date.now() + (3600 - 60) * 1000;
+                }
+            } catch (e) {
+                console.warn("Could not decode JWT to find expiration, falling back to 1 hour cache", e);
+                // Fallback to exactly 1 hour if decoding fails
+                tokenExpiry = Date.now() + (3600 - 60) * 1000;
+            }
+
+            return accessToken;
+        }
+
+        // ============================================================
+        // INIT CHECK — ensure required TDS types exist in the repo
+        // ============================================================
+        // Derived from UI_CONFIG.api.types — single source of truth
+        const REQUIRED_TYPES = Object.values(UI_CONFIG.api.types);
+
+        async function initCheckTypes() {
+            if (useMockData) {
+                console.info('[InitCheck] Mock Mode active — skipping type check.');
+                return;
+            }
+
+            const { host, repo, version } = UI_CONFIG.api;
+            const typesBase = `${host}/TestDataService/v${version}/repositories/${repo}/types`;
+
+            let token;
+            try {
+                token = await fetchToken();
+            } catch (e) {
+                console.warn('[InitCheck] Could not obtain token — skipping type check:', e.message);
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            };
+
+            // 1) Read all existing types
+            let existingTypes = [];
+            try {
+                const res = await fetch(typesBase, { headers });
+                if (res.ok) {
+                    const body = await res.json();
+                    // TypeList schema: { types: [ {name, ...}, ... ] }
+                    existingTypes = (body.types || body.items || []).map(t => t.name);
+                    console.info('[InitCheck] Existing types:', existingTypes);
+                } else {
+                    console.warn(`[InitCheck] ReadTypeList returned ${res.status} — will attempt to create all types.`);
+                }
+            } catch (e) {
+                console.warn('[InitCheck] Failed to list types:', e.message);
+            }
+
+            // 2) Create missing types
+            const missing = REQUIRED_TYPES.filter(t => !existingTypes.includes(t));
+            if (!missing.length) {
+                console.info('[InitCheck] All required types are present. ✓');
+                showToast('Repository types OK ✓', 'PASS');
+                return;
+            }
+
+            console.info('[InitCheck] Missing types to create:', missing);
+
+            const created = [], failed = [];
+            await Promise.all(missing.map(async typeName => {
+                try {
+                    const res = await fetch(typesBase, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ name: typeName })
+                    });
+                    if (res.ok || res.status === 200) {
+                        created.push(typeName);
+                        console.info(`[InitCheck] Created type: ${typeName}`);
+                    } else {
+                        const err = await res.text();
+                        failed.push(typeName);
+                        console.error(`[InitCheck] Failed to create ${typeName}: ${res.status} — ${err}`);
+                    }
+                } catch (e) {
+                    failed.push(typeName);
+                    console.error(`[InitCheck] Error creating ${typeName}:`, e.message);
+                }
+            }));
+
+            if (failed.length) {
+                showToast(`Init: ${created.length} type(s) created. ${failed.length} failed: ${failed.join(', ')}`, 'FAIL');
+            } else {
+                showToast(`Init: created ${created.length} type(s): ${created.join(', ')}`, 'PASS');
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '--:--';
+
+            // Handle Tosca {DATETIME} format: YYYYMMDDHHmmss (e.g. 20151230150914)
+            if (typeof timestamp === 'string' && timestamp.length >= 14 && /^\d+$/.test(timestamp.substring(0, 14))) {
+                const year = timestamp.substring(0, 4);
+                const month = timestamp.substring(4, 6) - 1; // JS months are 0-indexed
+                const day = timestamp.substring(6, 8);
+                const hour = timestamp.substring(8, 10);
+                const minute = timestamp.substring(10, 12);
+                const second = timestamp.substring(12, 14);
+                const d = new Date(year, month, day, hour, minute, second);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            }
+
+            // Fallback for ISO strings or numbers
+            try {
+                const d = new Date(timestamp);
+                return isNaN(d) ? '--:--' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            } catch {
+                return '--:--';
+            }
+        };
+
+        function getElapsedString(startStr, endStr) {
+            if (!startStr) return '--';
+
+            let startTime, endTime;
+
+            const parseToDate = (ts) => {
+                if (typeof ts === 'string' && ts.length >= 14 && /^\d+$/.test(ts.substring(0, 14))) {
+                    return new Date(ts.substring(0, 4), ts.substring(4, 6) - 1, ts.substring(6, 8), ts.substring(8, 10), ts.substring(10, 12), ts.substring(12, 14)).getTime();
+                }
+                const d = new Date(ts).getTime();
+                return isNaN(d) ? 0 : d;
+            };
+
+            startTime = parseToDate(startStr);
+            if (!startTime) return '--';
+
+            if (endStr) {
+                endTime = parseToDate(endStr);
+                if (!endTime) endTime = Date.now();
+            } else {
+                endTime = Date.now();
+            }
+
+            let diffSecs = Math.floor((endTime - startTime) / 1000);
+            if (diffSecs < 0) diffSecs = 0; // Prevent negatives if clocks sync weirdly
+
+            const m = Math.floor(diffSecs / 60);
+            const s = Math.floor(diffSecs % 60);
+
+            if (m > 60) {
+                const h = Math.floor(m / 60);
+                const rm = m % 60;
+                return `${h}h ${rm}m`;
+            } else if (m > 0) {
+                return `${m}m ${s.toString().padStart(2, '0')}s`;
+            } else {
+                return `${s}s`;
+            }
+        }
+
+        async function fetchExecutionData(isRetry = false, bypassPause = false) {
+            if (isPaused && !bypassPause) return;
+
+            if (useMockData) {
+                globalRuns = mockRuns;
+                globalTestCases = mockTestCases;
+                globalProcesses = mockProcesses;
+                globalSubProcesses = mockSubProcesses;
+                globalValidations = mockValidations;
+                setApiStatus(false, 'Displaying Mock Data');
+            } else {
+                try {
+                    const token = await fetchToken();
+                    const headers = {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    };
+
+                    const [r1, r2, r3, r4, r5] = await Promise.all([
+                        fetch(API_RUNS, { headers }),
+                        fetch(API_TESTCASES, { headers }),
+                        fetch(API_PROCESSES, { headers }),
+                        fetch(API_SUBPROCESSES, { headers }),
+                        fetch(API_VALIDATIONS, { headers })
+                    ]);
+
+                    // If the token was rejected, clear the cache and retry once
+                    if ((r1.status === 401 || r2.status === 401 || r3.status === 401 || r4.status === 401 || r5.status === 401) && !isRetry) {
+                        console.warn("Token rejected (401). Forcing regeneration and retrying...");
+                        accessToken = null;
+                        tokenExpiry = 0;
+                        return fetchExecutionData(true);
+                    }
+
+                    if (!r1.ok) throw new Error(`API returned ${r1.status}: ${r1.statusText}`);
+                    globalRuns = (await r1.json()).items;
+                    globalTestCases = (await r2.json()).items;
+                    globalProcesses = (await r3.json()).items;
+                    globalSubProcesses = (await r4.json()).items;
+                    globalValidations = (await r5.json()).items;
+                    setApiStatus(true);
+                } catch (e) {
+                    // Directly handle API failures without falling back to mock data
+                    globalRuns = [];
+                    globalTestCases = [];
+                    globalProcesses = [];
+                    globalSubProcesses = [];
+                    globalValidations = [];
+                    setApiStatus(false, `API Connection Failed: ${e.message}`);
+                    showToast(`API Connection Failed: ${e.message}`, 'FAIL');
+                }
+            }
+
+            // Toast on status change
+            globalRuns.forEach(item => {
+                const d = item.data;
+                if (prevStatuses[d.run_id] && prevStatuses[d.run_id] !== d.status)
+                    showToast(`${d.run_id} → ${d.status}`, d.status);
+                prevStatuses[d.run_id] = d.status;
+            });
+
+            if (!globalRuns.length) {
+                renderUI();
+                return;
+            }
+
+            if (!selectedRunId && globalRuns.length > 0) {
+                const active = globalRuns.find(r => r.data.status === 'RUNNING');
+                const failed = globalRuns.find(r => r.data.status === 'FAIL');
+                selectedRunId = active ? active.data.run_id : (failed ? failed.data.run_id : globalRuns[0].data.run_id);
+            }
+
+            // Build a snapshot covering ALL hierarchy levels so any status change
+            // (including FINISHED on subprocess/process/testcase) triggers a re-render.
+            const currentSnapshot =
+                globalRuns.map(r => r.data.status).join('|') + '§' +
+                globalTestCases.map(t => t.data.status).join('|') + '§' +
+                globalProcesses.map(p => p.data.status).join('|') + '§' +
+                globalSubProcesses.map(s => s.data.status).join('|');
+            const validationCount = globalValidations.length;
+
+            if (currentSnapshot !== lastRunStatusSnapshot || validationCount !== lastValidationCount) {
+
+                lastRunStatusSnapshot = currentSnapshot;
+                lastValidationCount = validationCount;
+
+                renderUI();
+                autoFocusFailure();
+            }
+            document.getElementById('time-display').innerText = new Date().toLocaleTimeString();
+        }
+
+        // ============================================================
+        // MAIN RENDER
+        // ============================================================
+        function renderUI() {
+            const counts = { total: 0, pass: 0, fail: 0, running: 0, pending: 0 };
+            const search = (document.getElementById('queue-search').value || '').toLowerCase();
+            const runsList = document.getElementById('runs-list');
+            runsList.innerHTML = '';
+            let targetRun = null;
+
+            // 1) First calculate summary statistics based on ALL globals
+            globalRuns.forEach(item => {
+                const d = item.data;
+                // Derive child statuses for runs (from test cases)
+                const tcStatuses = globalTestCases
+                    .filter(t => t.data.run_id === d.run_id)
+                    .map(t => t.data.status);
+                const effStatus = getEffectiveStatus(d.status, tcStatuses);
+                counts.total++;
+                if (effStatus === 'PASS') counts.pass++;
+                else if (effStatus === 'FAIL') counts.fail++;
+                else if (effStatus === 'RUNNING') counts.running++;
+                else counts.pending++;
+
+                if (d.run_id === selectedRunId) targetRun = d;
+            });
+
+            // 2) Then filter and slice the elements to actually render in the list
+            const runsToRender = globalRuns.filter(item => {
+                const d = item.data;
+                const matchFilter = activeFilter === 'ALL' || d.status === activeFilter;
+                const matchSearch = !search || d.run_id.toLowerCase().includes(search) || d.run_name.toLowerCase().includes(search);
+                return matchFilter && matchSearch;
+            }).slice(0, UI_CONFIG.limits.maxRunsInList); // Apply UI limit
+
+            runsToRender.forEach(item => {
+                const d = item.data;
+
+                const pct = calcRunProgress(d.run_id);
+                const tcData = globalTestCases.filter(t => t.data.run_id === d.run_id).map(t => t.data);
+                const tcCount = tcData.length;
+                const tcPass = tcData.filter(t => {
+                    const procStatuses = globalProcesses.filter(p => p.data.testcase_id === t.testcase_id && p.data.run_id === t.run_id).map(p => p.data.status);
+                    return getEffectiveStatus(t.status, procStatuses) === 'PASS';
+                }).length;
+                const tcFail = tcData.filter(t => {
+                    const procStatuses = globalProcesses.filter(p => p.data.testcase_id === t.testcase_id && p.data.run_id === t.run_id).map(p => p.data.status);
+                    return getEffectiveStatus(t.status, procStatuses) === 'FAIL';
+                }).length;
+                const tcRunning = tcData.filter(t => t.status === 'RUNNING').length;
+
+                const runTcStatuses = tcData.map(t => t.status);
+                const effRunStatus = getEffectiveStatus(d.status, runTcStatuses);
+                const progColor = effRunStatus === 'RUNNING' ? 'var(--status-running)'
+                    : effRunStatus === 'PASS' ? 'var(--status-pass)'
+                        : effRunStatus === 'FAIL' ? 'var(--status-fail)'
+                            : 'var(--status-pending)';
+
+                const card = document.createElement('div');
+                card.className = 'run-item' + (d.run_id === selectedRunId ? ' run-selected' : '');
+                card.tabIndex = 0;
+                card.title = d.run_name;
+                card.onclick = () => selectRun(d.run_id);
+                card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') selectRun(d.run_id); };
+                const displayStatus = effRunStatus;
+                card.innerHTML = `
+                    <div class="run-item-top">
+                        <span class="status-dot status-${displayStatus}"></span>
+                        <span class="run-id-label">${d.run_id}</span>
+                        <span class="badge badge-${displayStatus}" style="margin-left:auto;font-size:9px;">${displayStatus}</span>
+                    </div>
+                    <div class="run-item-meta">${d.run_name}</div>
+                    <div class="run-item-counts">
+                        <span style="color:var(--status-pass);">✓${tcPass}</span>
+                        <span style="color:var(--status-fail);">✕${tcFail}</span>
+                        ${tcRunning ? `<span style="color:var(--status-running);">▶${tcRunning}</span>` : ''}
+                        <span style="color:var(--text-muted);">${tcCount}TC</span>
+                    </div>
+                    <div class="run-item-prog">
+                        <div class="run-item-prog-fill" style="width:${pct}%;background:${progColor};"></div>
+                    </div>`;
+                runsList.appendChild(card);
+            });
+
+            if (!runsList.hasChildNodes())
+                runsList.innerHTML = '<div class="empty-state" style="font-size:11px;">No runs match filter.</div>';
+
+            // Summary cards
+            document.getElementById('count-total').innerText = counts.total;
+            document.getElementById('count-pass').innerText = counts.pass;
+            document.getElementById('count-fail').innerText = counts.fail;
+            document.getElementById('count-running').innerText = counts.running;
+            document.getElementById('count-pending').innerText = counts.pending;
+
+            // Donut
+            const finished = counts.pass + counts.fail;
+            const passRate = finished === 0 ? 0 : Math.round(counts.pass / finished * 100);
+            document.getElementById('count-rate').innerText = passRate + '%';
+            const circ = 2 * Math.PI * 13;
+            const passDash = (passRate / 100) * circ;
+            const failDash = ((100 - passRate) / 100) * circ;
+            document.getElementById('donut-pass-arc').setAttribute('stroke-dasharray', `${passDash} ${circ - passDash}`);
+            document.getElementById('donut-fail-arc').setAttribute('stroke-dasharray', `${failDash} ${circ - failDash}`);
+            document.getElementById('donut-fail-arc').setAttribute('stroke-dashoffset', -passDash);
+
+            updateMonitor(targetRun);
+            updateValidations();
+            const failItem = document.querySelector('.val-item-FAIL');
+            if (failItem) {
+                failItem.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+
+            // Keep process tree focused on latest activity
+            const phase = document.getElementById("phase-container");
+            const nearBottom =
+                phase.scrollHeight - phase.scrollTop - phase.clientHeight < 80;
+
+            if (nearBottom) {
+                phase.scrollTop = phase.scrollHeight;
+            }
+        }
+
+        window.selectRun = function (runId) {
+            selectedRunId = runId;
+            selectedNode = null;
+            renderUI();
+        };
+
+        let runsPanelCollapsed = false;
+        let validationCollapsed = false;
+
+        window.toggleRunsPanel = function () {
+
+            runsPanelCollapsed = !runsPanelCollapsed;
+
+            localStorage.setItem("runsCollapsed", runsPanelCollapsed);
+
+            document.getElementById('runs-panel')
+                .classList.toggle('collapsed', runsPanelCollapsed);
+            updateGridColumns();
+        };
+
+        runsPanelCollapsed = localStorage.getItem("runsCollapsed") === "true";
+        validationCollapsed = localStorage.getItem("validationCollapsed") === "true";
+
+        window.toggleValidationPanel = function () {
+
+            validationCollapsed = !validationCollapsed;
+
+            localStorage.setItem("validationCollapsed", validationCollapsed);
+
+            const panel = document.getElementById('validation-panel');
+            const btn = document.getElementById('validation-toggle');
+
+            panel.classList.toggle('collapsed', validationCollapsed);
+
+            btn.innerText = validationCollapsed ? '◀' : '▶';
+            updateGridColumns();
+            if (!validationCollapsed) {
+                // Remove notification dot when expanded
+                btn.innerHTML = '▶';
+            }
+        };
+
+        function updateGridColumns() {
+            const grid = document.getElementById("main-grid");
+            const left = runsPanelCollapsed ? UI_CONFIG.panelWidths.collapsed : (parseInt(localStorage.getItem("runsWidth")) || UI_CONFIG.panelWidths.leftDefault);
+            const right = validationCollapsed ? UI_CONFIG.panelWidths.collapsed : (parseInt(localStorage.getItem("validationWidth")) || UI_CONFIG.panelWidths.rightDefault);
+            grid.style.gridTemplateColumns = `${left}px 14px minmax(${UI_CONFIG.panelWidths.centerMin}px, 1fr) 14px ${right}px`;
+        }
+
+        // ---- Node selection (tree click) ----
+        function selectNode(type, runId, tcId, procId, spId) {
+            // Remove highlight from previous selection
+            document.querySelectorAll('.tree-node-selected')
+                .forEach(el => el.classList.remove('tree-node-selected'));
+            selectedNode = { type, runId, tcId, procId: procId || null, spId: spId || null };
+
+            if (type === 'tc') {
+                const node = document.querySelector(`[data-tc="${tcId}"]`);
+                if (node) node.classList.add('tree-node-selected');
+            }
+
+            if (type === 'proc') {
+                const node = document.querySelector(`[data-proc="${procId}"]`);
+                if (node) node.classList.add('tree-node-selected');
+            }
+
+            if (type === 'sp') {
+                const node = document.querySelector(`[data-sp="${spId}"]`);
+                if (node) node.classList.add('tree-node-selected');
+            }
+            updateBreadcrumb();
+            updateValidations();
+        }
+
+        function updateBreadcrumb() {
+            const bc = document.getElementById('val-breadcrumb');
+            if (!selectedNode) { bc.style.display = 'none'; return; }
+            const n = selectedNode;
+            // Look up names
+            const run = globalRuns.find(r => r.data.run_id === n.runId);
+            const tc = globalTestCases.find(t => t.data.testcase_id === n.tcId && t.data.run_id === n.runId);
+            const proc = n.procId ? globalProcesses.find(p => p.data.process_id === n.procId) : null;
+            const sp = n.spId ? globalSubProcesses.find(s => s.data.subprocess_id === n.spId) : null;
+
+            const parts = [
+                `<span class="crumb">${n.runId}</span>`
+            ];
+            if (tc) parts.push(`<span class="crumb-sep">›</span><span class="crumb">${tc.data.testcase_id}</span>`);
+            if (proc) parts.push(`<span class="crumb-sep">›</span><span class="crumb">${proc.data.process_name}</span>`);
+            if (sp) parts.push(`<span class="crumb-sep">›</span><span class="crumb">${sp.data.subprocess_name}</span>`);
+
+            bc.innerHTML = '📍 ' + parts.join(' ');
+            bc.style.display = 'flex';
+        }
+
+        // ============================================================
+        // PROCESS TREE MONITOR — dynamic hierarchy reconstruction
+        // Run → TestCase → Process → SubProcess
+        // ============================================================
+        function resolveStatus(statuses) {
+            // Normalise: treat FINISHED same as PASS for aggregation purposes
+            const norm = statuses.map(s => s === 'FINISHED' ? 'PASS' : s);
+            if (norm.includes('FAIL')) return 'FAIL';
+            if (norm.includes('RUNNING')) return 'RUNNING';
+            if (norm.length && norm.every(s => s === 'PASS')) return 'PASS';
+            if (norm.some(s => s === 'PASS' || s === 'RUNNING')) return 'RUNNING';
+            return 'PENDING';
+        }
+
+        /**
+         * getEffectiveStatus – converts a raw FINISHED status into PASS or FAIL
+         * by inspecting the entity's immediate child statuses.
+         * For all other statuses the raw value is returned unchanged.
+         *
+         * @param {string} rawStatus  - the entity's own `status` field
+         * @param {string[]} childStatuses - array of child status strings
+         * @returns {string} effective display status
+         */
+        function getEffectiveStatus(rawStatus, childStatuses = []) {
+            if (rawStatus !== 'FINISHED') return rawStatus;
+            // FINISHED: derive outcome from children
+            const normChildren = childStatuses.map(s => s === 'FINISHED' ? 'PASS' : s);
+            return normChildren.includes('FAIL') ? 'FAIL' : 'PASS';
+        }
+
+        function makeCollapsible(titleEl, bodyEl, key, onSelect) {
+            const wasCollapsed = collapsedNodes[key] === true;
+            bodyEl.style.overflow = 'hidden';
+            bodyEl.style.transition = 'max-height 0.3s ease';
+            bodyEl.style.maxHeight = wasCollapsed ? '0px' : '600px';
+            titleEl.style.cursor = 'pointer';
+            const chev0 = titleEl.querySelector('.phase-chevron');
+            if (chev0 && wasCollapsed) chev0.style.transform = 'rotate(-90deg)';
+
+            let isCollapsed = wasCollapsed;
+            titleEl.onclick = function (e) {
+                e.stopPropagation();
+                isCollapsed = !isCollapsed;
+                collapsedNodes[key] = isCollapsed;
+                bodyEl.style.maxHeight = isCollapsed ? '0px' : '600px';
+                const chev = titleEl.querySelector('.phase-chevron');
+                if (chev) chev.style.transform = isCollapsed ? 'rotate(-90deg)' : '';
+                if (onSelect) onSelect(titleEl);
+            };
+        }
+
+
+        function updateMonitor(runData) {
+            const phaseContainer = document.getElementById('phase-container');
+            if (!runData) {
+                document.getElementById('mon-runid').innerText = '--';
+                document.getElementById('mon-runid').style.color = 'var(--text-main)';
+                document.getElementById('mon-testcase').innerText = 'No run selected';
+                document.getElementById('mon-process').innerText = '-- TestCases complete';
+                document.getElementById('mon-progress-text').innerText = '0%';
+                document.getElementById('mon-progress').style.width = '0%';
+                document.getElementById('mon-progress').className = 'progress-bar';
+                const badge = document.getElementById('monitor-badge');
+                badge.className = 'badge';
+                badge.innerText = 'NONE';
+
+                phaseContainer.innerHTML = '<div class="empty-state">Select a run to inspect</div>';
+                return;
+            }
+
+            // Header details
+            const runTCs = globalTestCases.filter(t => t.data.run_id === runData.run_id);
+            const tcTotal = runTCs.length;
+            const tcDone = runTCs.filter(t => {
+                const procStatuses = globalProcesses.filter(p => p.data.testcase_id === t.data.testcase_id && p.data.run_id === t.data.run_id).map(p => p.data.status);
+                const e = getEffectiveStatus(t.data.status, procStatuses);
+                return e === 'PASS' || e === 'FAIL';
+            }).length;
+            const pct = calcRunProgress(runData.run_id);
+
+            // Resolve run's effective status from its test cases
+            const runTcStatuses = runTCs.map(t => t.data.status);
+            const effRunStatus = getEffectiveStatus(runData.status, runTcStatuses);
+
+            document.getElementById('mon-runid').innerText = runData.run_id;
+            document.getElementById('mon-runid').style.color = `var(--status-${effRunStatus.toLowerCase()})`;
+            document.getElementById('mon-testcase').innerText = runData.run_name;
+            document.getElementById('mon-process').innerText = `${tcDone}/${tcTotal} TestCases complete`;
+            document.getElementById('mon-process').style.color = effRunStatus === 'FAIL' ? 'var(--status-fail)' : 'var(--text-main)';
+            document.getElementById('mon-progress-text').innerText = `${pct}%`;
+
+            const bar = document.getElementById('mon-progress');
+            bar.style.width = `${pct}%`;
+            bar.className = 'progress-bar ' + (effRunStatus === 'RUNNING' ? 'running-bar' : effRunStatus === 'PASS' ? 'pass-bar' : 'fail-bar');
+
+            const badge = document.getElementById('monitor-badge');
+            badge.className = `badge badge-${effRunStatus}`;
+            badge.innerText = effRunStatus;
+
+            // Build hierarchy: TestCase → Process → SubProcess
+            phaseContainer.innerHTML = '';
+            runTCs.forEach(tcItem => {
+                const tc = tcItem.data;
+                const tcProcesses = globalProcesses.filter(p => p.data.testcase_id === tc.testcase_id && p.data.run_id === tc.run_id);
+                const tcStatus = getEffectiveStatus(tc.status, tcProcesses.map(p => p.data.status));
+
+                // --- TestCase block ---
+                const tcWrap = document.createElement('div');
+                tcWrap.style.cssText = 'margin-bottom:14px;min-width:0;';
+
+                const tcTitle = document.createElement('div');
+                tcTitle.className = 'phase-title';
+                tcTitle.setAttribute("data-tc", tc.testcase_id);
+                tcTitle.style.cssText = 'font-size:13px;font-weight:700;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:6px;margin-bottom:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;display:flex;align-items:center;';
+
+                const timeString = getElapsedString(tc.start_time, tc.end_time);
+                tcTitle.innerHTML = `<span class="status-dot status-${tcStatus}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${tc.testcase_id}: ${tc.testcase_name}</span> <span style="margin-left:auto;font-size:10px;color:var(--text-muted);font-weight:normal;flex-shrink:0;padding-left:8px;">${timeString !== '--' ? timeString : '...'}</span><span class="phase-chevron" style="margin-left:8px;flex-shrink:0;">▼</span>`;
+
+                // Restore selection highlight on re-render
+                if (selectedNode && selectedNode.tcId === tc.testcase_id && !selectedNode.procId)
+                    tcTitle.classList.add('tree-node-selected');
+
+                const tcBody = document.createElement('div');
+                tcBody.className = 'substep-list';
+                tcBody.style.cssText = 'padding-left:16px;border-left:1px dashed var(--border-color);margin-left:5px;';
+
+                makeCollapsible(tcTitle, tcBody, tc.testcase_id, (el) => {
+                    document.querySelectorAll('.tree-node-selected')
+                        .forEach(n => n.classList.remove('tree-node-selected'));
+                    selectNode('tc', tc.run_id, tc.testcase_id, null, null);
+                    el.classList.add('tree-node-selected');
+                });
+                // --- Processes inside this TC ---
+                tcProcesses.forEach(pItem => {
+                    const proc = pItem.data;
+                    const prSubs = globalSubProcesses.filter(s => s.data.process_id === proc.process_id && s.data.testcase_id === proc.testcase_id && s.data.run_id === proc.run_id);
+                    const procStatus = getEffectiveStatus(proc.status, prSubs.map(s => s.data.status));
+
+                    const procWrap = document.createElement('div');
+                    procWrap.style.cssText = 'margin-bottom:8px;min-width:0;';
+
+                    const procTitle = document.createElement('div');
+                    procTitle.className = 'phase-title';
+                    procTitle.setAttribute("data-proc", proc.process_id);
+                    procTitle.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;display:flex;align-items:center;';
+                    procTitle.innerHTML = `<span class="status-dot status-${procStatus}" style="width:8px;height:8px;flex-shrink:0;"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${proc.process_name}</span><span class="phase-chevron" style="font-size:9px;flex-shrink:0;margin-left:8px;">▼</span>`;
+
+                    // Restore selection
+                    if (selectedNode && selectedNode.procId === proc.process_id && !selectedNode.spId)
+                        procTitle.classList.add('tree-node-selected');
+
+                    const procBody = document.createElement('ul');
+                    procBody.className = 'substep-list';
+                    procBody.style.cssText = 'padding-left:14px;';
+
+                    makeCollapsible(procTitle, procBody, proc.process_id, (el) => {
+                        document.querySelectorAll('.tree-node-selected')
+                            .forEach(n => n.classList.remove('tree-node-selected'));
+                        selectNode('proc', proc.run_id, proc.testcase_id, proc.process_id, null);
+                        el.classList.add('tree-node-selected');
+                    });
+
+                    // --- SubProcesses ---
+                    prSubs.forEach(spItem => {
+                        const sp = spItem.data;
+                        // Subprocesses have no children — derive from validations
+                        const spValStatuses = globalValidations
+                            .filter(v => v.data.subprocess_id === sp.subprocess_id)
+                            .map(v => v.data.status);
+                        const spStatus = getEffectiveStatus(sp.status, spValStatuses);
+                        const sli = document.createElement('li');
+                        sli.setAttribute("data-sp", sp.subprocess_id);
+                        sli.className = 'substep-item';
+                        sli.style.cssText = 'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;display:flex;align-items:center;';
+                        const failStyle = spStatus === 'FAIL'
+                            ? 'color:var(--status-fail);font-weight:600;text-shadow:0 0 4px rgba(241,65,108,.6);'
+                            : '';
+                        sli.innerHTML = `<span class="status-dot status-${spStatus}" style="width:6px;height:6px;flex-shrink:0;"></span><span style="${failStyle}overflow:hidden;text-overflow:ellipsis;flex:1;">${sp.subprocess_name}</span>`;
+
+                        // Restore selection
+                        if (selectedNode && selectedNode.spId === sp.subprocess_id)
+                            sli.classList.add('tree-node-selected');
+
+                        sli.onclick = function (e) {
+                            e.stopPropagation();
+                            selectNode('sp', sp.run_id, sp.testcase_id, sp.process_id, sp.subprocess_id);
+                            if (sp.status === 'FAIL') {
+                                sli.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }
+                        };
+                        procBody.appendChild(sli);
+                    });
+
+                    procWrap.appendChild(procTitle);
+                    procWrap.appendChild(procBody);
+                    tcBody.appendChild(procWrap);
+                });
+
+                tcWrap.appendChild(tcTitle);
+                tcWrap.appendChild(tcBody);
+                phaseContainer.appendChild(tcWrap);
+            });
+            const failedNode = phaseContainer.querySelector('.substep-item .status-dot.status-FAIL')?.closest('.substep-item');
+            if (failedNode) {
+                failedNode.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }
+        }
+
+        // ============================================================
+        // VALIDATION STREAM — contextual filtering by selectedNode
+        // ============================================================
+        function updateValidations() {
+            const c = document.getElementById('validation-container');
+            let list;
+
+            if (selectedNode) {
+                const n = selectedNode;
+                list = globalValidations.filter(v => {
+                    const d = v.data;
+                    if (d.run_id !== n.runId) return false;
+                    if (n.type === 'tc') return d.testcase_id === n.tcId;
+                    if (n.type === 'proc') return d.testcase_id === n.tcId && d.process_id === n.procId;
+                    if (n.type === 'sp') return d.testcase_id === n.tcId && d.process_id === n.procId && d.subprocess_id === n.spId;
+                    return false;
+                }).map(v => v.data);
+            } else {
+                // No tree selection — show all for current run
+                list = selectedRunId
+                    ? globalValidations.filter(v => v.data.run_id === selectedRunId).map(v => v.data)
+                    : [];
+            }
+
+            const emptyMsg = selectedNode
+                ? 'No validations for this selection.'
+                : 'Select a node in the Process Tree to filter validations.';
+
+            if (!list.length) { c.innerHTML = `<div class="empty-state">${emptyMsg}</div>`; return; }
+
+            // Apply Validation Stream Limit
+            list = list.slice(0, UI_CONFIG.limits.maxValidationsInStream);
+
+            c.innerHTML = '';
+            list.forEach(val => {
+                const div = document.createElement('div');
+                div.className = `validation-item val-item-${val.status}`;
+                const ac = val.status === 'PASS' ? 'actual-pass' : 'actual-fail';
+                const err = val.error ? `<div style="color:var(--status-fail);margin-top:5px;font-size:11px;">⚠ ${val.error}</div>` : '';
+
+                // Construct context breadcrumbs from the distinct fields, if provided
+                let contextStr = '';
+                if (val.testcase_id) {
+                    let pName = val.process_id;
+                    const pObj = globalProcesses.find(p => p.data.process_id === val.process_id && p.data.run_id === val.run_id);
+                    if (pObj) pName = pObj.data.process_name || pName;
+
+                    let spName = val.subprocess_id;
+                    const spObj = globalSubProcesses.find(s => s.data.subprocess_id === val.subprocess_id && s.data.run_id === val.run_id);
+                    if (spObj) spName = spObj.data.subprocess_name || spName;
+
+                    const parts = [val.testcase_id, pName, spName].filter(Boolean);
+                    contextStr = parts.join(' › ');
+                } else {
+                    contextStr = 'Validation Step';
+                }
+
+                // Consume discrete flat properties rather than parsing the details string
+                let expectedStr = val.Expected !== undefined ? val.Expected : (val.expected || '--');
+                let actualStr = val.Actual !== undefined ? val.Actual : (val.actual || '--');
+
+                // If "Difference" key exists on the flat object, append it to actual
+                if (val.Difference !== undefined) {
+                    actualStr += `<br/><span style="color:var(--status-fail);font-size:10px;">Diff: ${val.Difference}</span>`;
+                }
+
+                const dispTime = formatTime(val.timestamp || val.time);
+                const dispMsg = val.message || val.validation_name || 'Validation Result';
+
+                div.innerHTML = `
+                    <div class="val-header">
+                        <span>[${dispTime}] ${dispMsg}</span>
+                        <span class="badge badge-${val.status}">${val.status}</span>
+                    </div>
+                    ${contextStr ? `<div style="margin-bottom:4px;"><span style="color:var(--text-muted);font-size:10px;">${contextStr}</span></div>` : ''}
+                    <div class="val-details">
+                        ${expectedStr !== '--' && expectedStr !== '' ? `<div><span class="expected">Expected:</span> ${expectedStr}</div>` : ''}
+                        ${actualStr !== '--' && actualStr !== '' ? `<div><span class="${ac}">Actual:</span> ${actualStr}</div>` : ''}
+                        ${err}
+                    </div>`;
+                c.appendChild(div);
+            });
+
+            // Check for failures to annotate the collapsed toggle button
+            if (validationCollapsed && list.some(v => v.status === "FAIL")) {
+                const btn = document.getElementById('validation-toggle');
+                if (btn) btn.innerHTML = '◀ <span style="color:var(--status-fail);font-size:14px;line-height:1;">●</span>';
+            }
+
+            const isNearBottom =
+                c.scrollHeight - c.scrollTop - c.clientHeight < 80;
+
+            if (isNearBottom && list.length) {
+                c.scrollTop = c.scrollHeight;
+            }
+        }
+
+        function autoFocusFailure() {
+
+            if (selectedNode) return;   // prevent override
+
+            const fail = globalValidations.find(v => v.data.status === "FAIL");
+
+            if (!fail) return;
+
+            const d = fail.data;
+
+            selectedRunId = d.run_id;
+
+            selectedNode = {
+                type: 'sp',
+                runId: d.run_id,
+                tcId: d.testcase_id,
+                procId: d.process_id,
+                spId: d.subprocess_id
+            };
+
+            // expand tree path
+            collapsedNodes[d.testcase_id] = false;
+            collapsedNodes[d.process_id] = false;
+
+        }
+        // Keyboard nav
+        document.addEventListener('keydown', e => {
+            const rows = [...document.querySelectorAll('.queue-row')];
+            if (!rows.length) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); focusedRowIndex = Math.min(focusedRowIndex + 1, rows.length - 1); rows[focusedRowIndex].focus(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); focusedRowIndex = Math.max(focusedRowIndex - 1, 0); rows[focusedRowIndex].focus(); }
+        });
+
+        // Run init check once, then start polling
+        initCheckTypes().catch(e => console.error('[InitCheck] Unhandled error:', e));
+        fetchExecutionData();
+        setInterval(fetchExecutionData, UI_CONFIG.timing.dataRefreshRateMs);
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            if (runsPanelCollapsed) {
+                document.getElementById("runs-panel").classList.add("collapsed");
+            }
+            const panel = document.getElementById("validation-panel");
+            const btn = document.getElementById("validation-toggle");
+
+            if (validationCollapsed) {
+                panel.classList.add("collapsed");
+                btn.innerText = "◀";
+            } else {
+                btn.innerText = "▶";
+            }
+
+            const savedLeft = localStorage.getItem("runsWidth");
+            const savedRight = localStorage.getItem("validationWidth");
+
+            updateGridColumns();
+
+            initResizers();
+        });
+
+        function initResizers() {
+
+            const grid = document.getElementById("main-grid");
+
+            const leftPanel = document.getElementById("runs-panel");
+            const rightPanel = document.getElementById("validation-panel");
+
+            const leftResizer = document.getElementById("resize-left");
+            const rightResizer = document.getElementById("resize-right");
+
+            let startX;
+            let startWidth;
+
+            // LEFT RESIZE
+            leftResizer.addEventListener("mousedown", e => {
+                if (runsPanelCollapsed) return;
+                document.body.classList.add("resizing");
+
+                startX = e.clientX;
+                startWidth = leftPanel.offsetWidth;
+
+                const rightWidth = rightPanel.offsetWidth;
+                const availableForLeft = document.body.clientWidth - 40 - 28 - rightWidth - UI_CONFIG.panelWidths.centerMin;
+                const dynamicMax = Math.max(UI_CONFIG.panelWidths.leftMin, availableForLeft);
+
+                function onMove(ev) {
+
+                    let newWidth = startWidth + (ev.clientX - startX);
+                    newWidth = Math.max(UI_CONFIG.panelWidths.leftMin, Math.min(dynamicMax, newWidth));
+                    grid.style.gridTemplateColumns =
+                        `${newWidth}px 14px minmax(${UI_CONFIG.panelWidths.centerMin}px, 1fr) 14px ${rightWidth}px`
+
+                    localStorage.setItem("runsWidth", newWidth);
+                }
+
+                function onUp() {
+                    document.body.classList.remove("resizing");
+                    document.removeEventListener("mousemove", onMove);
+                    document.removeEventListener("mouseup", onUp);
+                }
+
+                document.addEventListener("mousemove", onMove);
+                document.addEventListener("mouseup", onUp);
+            });
+
+            // RIGHT RESIZE
+            rightResizer.addEventListener("mousedown", e => {
+                if (validationCollapsed) return;
+                document.body.classList.add("resizing");
+
+                startX = e.clientX;
+                startWidth = rightPanel.offsetWidth;
+
+                const leftWidth = leftPanel.offsetWidth;
+                const availableForRight = document.body.clientWidth - 40 - 28 - leftWidth - UI_CONFIG.panelWidths.centerMin;
+                const dynamicMax = Math.max(UI_CONFIG.panelWidths.rightMin, availableForRight);
+
+                function onMove(ev) {
+
+                    let newWidth = startWidth - (ev.clientX - startX);
+                    newWidth = Math.max(UI_CONFIG.panelWidths.rightMin, Math.min(dynamicMax, newWidth));
+
+                    grid.style.gridTemplateColumns =
+                        `${leftWidth}px 14px minmax(${UI_CONFIG.panelWidths.centerMin}px, 1fr) 14px ${newWidth}px`;
+
+                    localStorage.setItem("validationWidth", newWidth);
+                }
+
+                function onUp() {
+                    document.body.classList.remove("resizing");
+                    document.removeEventListener("mousemove", onMove);
+                    document.removeEventListener("mouseup", onUp);
+                }
+
+                document.addEventListener("mousemove", onMove);
+                document.addEventListener("mouseup", onUp);
+            });
+        }
+
+    </script>
+</body>
+
+</html>
