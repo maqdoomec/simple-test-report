@@ -26,11 +26,12 @@ interface ValidationStreamProps {
     isCollapsed: boolean;
     toggleCollapse: () => void;
     emptyMessage: string;
+    breadcrumb?: string[];
 }
 
 type StatusFilter = 'ALL' | 'PASS' | 'FAIL';
 
-const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed, toggleCollapse, emptyMessage }) => {
+const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed, toggleCollapse, emptyMessage, breadcrumb = [] }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [searchValue, setSearchValue] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
@@ -101,6 +102,18 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
                 </div>
             )}
 
+            {/* Breadcrumb (expanded only) */}
+            {!isCollapsed && breadcrumb.length > 0 && (
+                <div className="text-[11px] text-text-muted px-2 py-[5px] mx-3 mt-2 bg-accent-primary/[0.08] rounded-[6px] border-l-[3px] border-accent-primary flex flex-wrap items-center gap-1 shrink-0">
+                    {breadcrumb.map((crumb, i) => (
+                        <span key={i} className="flex items-center gap-1">
+                            {i > 0 && <span className="text-text-muted opacity-60">›</span>}
+                            <span className="text-text-main font-semibold">{crumb}</span>
+                        </span>
+                    ))}
+                </div>
+            )}
+
             {/* Filter Bar (expanded only) */}
             {!isCollapsed && (
                 <div className="px-3 py-2 bg-white/[0.02] border-b border-border-light flex flex-col gap-2 shrink-0">
@@ -161,9 +174,9 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
 
             {/* Expanded Content Area */}
             {!isCollapsed && (
-                <div ref={containerRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar scroll-smooth">
+                <div ref={containerRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar scroll-smooth font-mono">
                     {filteredValidations.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-text-muted text-[13px] gap-3 py-8">
+                        <div className="flex-1 flex flex-col items-center justify-center text-text-muted text-[13px] gap-3 py-8 font-sans">
                             <svg className="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
@@ -171,7 +184,7 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
                             {(statusFilter !== 'ALL' || searchValue) && validations.length > 0 && (
                                 <button
                                     onClick={() => { setStatusFilter('ALL'); setSearchValue(''); }}
-                                    className="text-accent-primary text-[11px] hover:underline bg-transparent"
+                                    className="text-accent-primary text-[11px] hover:underline bg-transparent font-sans"
                                 >
                                     Clear filters
                                 </button>
@@ -203,7 +216,7 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
                             const dispMsg = val.message || val.validation_name || 'Validation Result';
 
                             return (
-                                <div key={idx} className={`bg-bg-panel p-3 rounded-lg border-l-4 shadow-sm text-sm break-words transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${val.status === 'PASS' ? 'border-status-pass' : 'border-status-fail'}`}>
+                                <div key={idx} className={`bg-bg-panel p-3 rounded-lg border-l-4 shadow-sm text-sm break-words transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md animate-slide-in ${val.status === 'PASS' ? 'border-status-pass' : 'border-status-fail'}`}>
                                     <div className="flex justify-between items-start mb-1.5 gap-2">
                                         <span className="font-semibold text-text-main">[{formattedTime}] {dispMsg}</span>
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm shrink-0 ${val.status === 'PASS' ? 'bg-status-pass' : val.status === 'FAIL' ? 'bg-status-fail' : 'bg-status-info'}`}>
