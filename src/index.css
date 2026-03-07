@@ -18,7 +18,8 @@
   --color-status-pending: #64748b;
   --color-status-info: #3b82f6;
 
-  --font-sans: "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+  --font-sans: "Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+  --color-bg-card-hover: hsla(0, 0%, 100%, 0.05);
   --font-mono: "Consolas", "Monaco", monospace;
 
   --animate-pulse-running: pulse-running 1.5s infinite;
