@@ -105,7 +105,7 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
             {/* Breadcrumb (expanded only) */}
             {!isCollapsed && breadcrumb.length > 0 && (
                 <div className="text-[11px] text-text-muted px-2 py-[5px] mx-3 mt-2 bg-accent-primary/[0.08] rounded-[6px] border-l-[3px] border-accent-primary flex flex-wrap items-center gap-1 shrink-0">
-                    {breadcrumb.map((crumb, i) => (
+                    📍 {breadcrumb.map((crumb, i) => (
                         <span key={i} className="flex items-center gap-1">
                             {i > 0 && <span className="text-text-muted opacity-60">›</span>}
                             <span className="text-text-main font-semibold">{crumb}</span>
