@@ -1,0 +1,57 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Server",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/server",
+            "runtimeArgs": [
+                "-r",
+                "ts-node/register"
+            ],
+            "args": [
+                "${workspaceFolder}/server/server.ts"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "sourceMaps": true
+        },
+        {
+            "name": "Launch Client (Edge)",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/src",
+            "preLaunchTask": "Start Vite",
+            "sourceMaps": true
+        },
+        {
+            "name": "Launch Client (Chrome)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/src",
+            "preLaunchTask": "Start Vite",
+            "sourceMaps": true
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launch Both (Edge)",
+            "configurations": [
+                "Launch Server",
+                "Launch Client (Edge)"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Launch Both (Chrome)",
+            "configurations": [
+                "Launch Server",
+                "Launch Client (Chrome)"
+            ],
+            "stopAll": true
+        }
+    ]
+}
