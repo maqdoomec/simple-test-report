@@ -344,8 +344,8 @@ function App() {
         </div>
       )}
 
-      <div className="relative">
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] mb-5 opacity-100'}`}>
+      <div className="relative shrink-0">
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] opacity-100'}`}>
           <StatCards
             totalRuns={stats.total}
             totalPassed={stats.pass}
