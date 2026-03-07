@@ -20,7 +20,7 @@ const Header: FC<HeaderProps> = ({
     apiStatus
 }) => {
     return (
-        <header className="flex justify-between items-center mb-5 pb-[15px] border-b border-border-medium flex-wrap gap-[10px]">
+        <header className="flex justify-between items-center mb-5 pb-[15px] border-b border-border-color flex-wrap gap-[10px]">
             {/* Title */}
             <h1 className="text-[22px] font-bold tracking-[0.5px] bg-clip-text text-transparent bg-linear-to-r from-[#e4e6ef] to-accent-primary flex items-center gap-2 m-0">
                 <svg className="w-5 h-5 text-text-main" viewBox="0 0 24 24" fill="currentColor">
@@ -35,7 +35,7 @@ const Header: FC<HeaderProps> = ({
                 {/* API Status */}
                 <div className={`flex items-center gap-1.5 text-[12px] px-2.5 py-[5px] rounded-[20px] border ${apiStatus === 'online' ? 'border-status-pass/30' : 'border-status-fail/30'}`}>
                     <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-status-pass shadow-[0_0_6px_var(--color-status-pass)] animate-pulse-green' : 'bg-status-fail'}`}></div>
-                    <span className="text-text-main">
+                    <span className={apiStatus === 'online' ? 'text-text-main' : 'text-text-main'}>
                         {apiStatus === 'online' ? 'Live' : 'Offline'}
                     </span>
                 </div>
@@ -52,7 +52,7 @@ const Header: FC<HeaderProps> = ({
                             : 'bg-bg-card border-border-medium hover:bg-bg-card-hover text-text-main'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                        {isPaused ? '▶ Resume' : '⏸ Pause'}
+                        {isPaused ? '▶ Resume' : '⏸ Paused (Mock)'}
                     </button>
 
                     <button
