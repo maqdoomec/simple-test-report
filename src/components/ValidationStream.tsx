@@ -68,7 +68,7 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
     const failCount = validations.filter(v => v.status === 'FAIL').length;
 
     return (
-        <div className={`flex flex-col min-h-0 bg-bg-card rounded-xl border border-border-medium overflow-hidden h-full relative transition-all duration-300 ${isCollapsed ? 'opacity-90 cursor-pointer hover:border-text-muted hover:bg-white/5 items-center' : ''}`} onClick={isCollapsed ? toggleCollapse : undefined}>
+        <div className={`flex flex-col min-h-0 bg-bg-card rounded-xl border border-border-medium h-full relative transition-all duration-300 ${isCollapsed ? 'opacity-90 cursor-pointer hover:border-text-muted hover:bg-white/5 items-center' : ''}`} onClick={isCollapsed ? toggleCollapse : undefined}>
 
             {/* Header */}
             <div className={`bg-bg-card border-b border-border-medium p-3 flex items-center shadow-md relative z-10 ${isCollapsed ? 'justify-center border-none p-4' : 'justify-between'}`}>
