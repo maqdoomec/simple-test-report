@@ -161,7 +161,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
             </div>
 
             {/* Tree Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 text-[13px] custom-scrollbar scroll-smooth">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-6 text-[13px] custom-scrollbar scroll-smooth">
                 {testCases.map(tc => {
                     const tcId = tc.testcase_id;
                     const isCollapsed = collapsedNodes[tcId];

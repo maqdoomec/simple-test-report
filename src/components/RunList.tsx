@@ -169,7 +169,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
 
             {/* List (expanded only) */}
             {!isCollapsed && (
-                <div className="flex-1 min-h-0 overflow-y-auto p-[10px] bg-bg-card custom-scrollbar">
+                <div className="flex-1 min-h-0 overflow-y-auto p-[10px] pb-6 bg-bg-card custom-scrollbar">
                     {filteredRuns.length === 0 ? (
                         <div className="flex flex-col items-center justify-center p-8 text-text-muted text-[13px] gap-3">
                             <svg className="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
