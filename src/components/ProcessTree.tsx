@@ -98,7 +98,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     };
 
     return (
-        <div className="flex flex-col bg-bg-card rounded-xl border border-border-medium overflow-hidden h-full shadow-lg transition-all duration-300">
+        <div className="flex flex-col min-h-0 bg-bg-card rounded-xl border border-border-medium overflow-hidden h-full shadow-lg transition-all duration-300">
 
             {/* Header */}
             <div className="bg-bg-panel border-b border-border-medium p-[15px] font-semibold flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.2)]">

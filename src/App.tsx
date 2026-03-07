@@ -305,7 +305,7 @@ function App() {
     // if (selectedRunData) crumbs.push(selectedRunData.run_name || selectedRunData.run_id);
     if (selectedRunData) crumbs.push(selectedRunData.run_id);
     if (selectedNode.tcId) {
-      const tc = filteredTestCases.find(t => t.testcase_id === selectedNode.tcId);
+      
       // crumbs.push(tc?.testcase_name || selectedNode.tcId);
       crumbs.push(selectedNode.tcId);
     }
@@ -355,7 +355,7 @@ function App() {
 
       {/* Main Layout Grid */}
       <div
-        className="grid gap-0 items-start h-[calc(100vh-160px)]"
+        className="grid gap-0 items-stretch h-[calc(100vh-160px)]"
         style={{ gridTemplateColumns: `${effectiveLeftWidth}px 14px minmax(200px, 1fr) 14px ${isValidationCollapsed ? 48 : rightWidth}px`, transition: 'grid-template-columns 0.28s ease' }}
       >
         <RunList
