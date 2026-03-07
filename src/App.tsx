@@ -411,6 +411,23 @@ function App() {
           setSelectedNode={setSelectedNode}
           collapsedNodes={collapsedNodes}
           toggleNodeCollapse={handleToggleNodeCollapse}
+          collapseAll={() => {
+            const allIds: Record<string, boolean> = {};
+            filteredTestCases.forEach(tc => { allIds[tc.testcase_id] = true; });
+            filteredProcesses.forEach(p => { allIds[p.process_id] = true; });
+            setCollapsedNodes(prev => ({ ...prev, ...allIds }));
+          }}
+          expandAll={() => {
+            const allIds = [
+              ...filteredTestCases.map(tc => tc.testcase_id),
+              ...filteredProcesses.map(p => p.process_id),
+            ];
+            setCollapsedNodes(prev => {
+              const next = { ...prev };
+              allIds.forEach(id => { delete next[id]; });
+              return next;
+            });
+          }}
         />
 
         {/* Right Resizer */}
