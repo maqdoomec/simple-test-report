@@ -31,6 +31,7 @@ function App() {
   const [isPaused, setIsPaused] = useState(false);
   const [apiStatus, setApiStatus] = useState<'online' | 'offline'>('online');
   const [isValidationCollapsed, setIsValidationCollapsed] = useState(false);
+  const [isRunsCollapsed, setIsRunsCollapsed] = useState(false);
 
   // Data States
   const [runs, setRuns] = useState<{ data: RunNode }[]>([]);
@@ -149,7 +150,6 @@ function App() {
 
   const handleExportCSV = () => {
     showToast('Exporting to CSV...', 'info');
-    // Basic implementation for demo
     const csvContent = "data:text/csv;charset=utf-8,Run ID,Status\n"
       + runs.map(r => `${r.data.run_id},${r.data.status}`).join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -167,6 +167,7 @@ function App() {
 
   // Drag Resizers
   const startResizeLeft = (e: React.MouseEvent) => {
+    if (isRunsCollapsed) return;
     e.preventDefault();
     const startX = e.clientX;
     const startW = leftWidthRef.current;
@@ -174,7 +175,7 @@ function App() {
     const onMove = (ev: MouseEvent) => {
       let newWidth = startW + (ev.clientX - startX);
       const rightW = rightWidthRef.current;
-      const available = document.body.clientWidth - 40 - 28 - (isValidationCollapsed ? 48 : rightW) - 200; // 200 min center
+      const available = document.body.clientWidth - 40 - 28 - (isValidationCollapsed ? 48 : rightW) - 200;
       newWidth = Math.max(160, Math.min(Math.max(160, available), newWidth));
       setLeftWidth(newWidth);
       leftWidthRef.current = newWidth;
@@ -201,7 +202,7 @@ function App() {
     const onMove = (ev: MouseEvent) => {
       let newWidth = startW - (ev.clientX - startX);
       const leftW = leftWidthRef.current;
-      const available = document.body.clientWidth - 40 - 28 - leftW - 200; // 200 min center
+      const available = document.body.clientWidth - 40 - 28 - leftW - 200;
       newWidth = Math.max(200, Math.min(Math.max(200, available), newWidth));
       setRightWidth(newWidth);
       rightWidthRef.current = newWidth;
@@ -297,6 +298,29 @@ function App() {
     };
   });
 
+  // Build breadcrumb from selectedNode
+  const breadcrumb = useMemo(() => {
+    if (!selectedNode) return [];
+    const crumbs: string[] = [];
+    if (selectedRunData) crumbs.push(selectedRunData.run_name || selectedRunData.run_id);
+    if (selectedNode.tcId) {
+      const tc = filteredTestCases.find(t => t.testcase_id === selectedNode.tcId);
+      crumbs.push(tc?.testcase_name || selectedNode.tcId);
+    }
+    if (selectedNode.procId) {
+      const proc = filteredProcesses.find(p => p.process_id === selectedNode.procId);
+      crumbs.push(proc?.process_name || selectedNode.procId);
+    }
+    if (selectedNode.spId) {
+      const sp = filteredSubProcesses.find(s => s.subprocess_id === selectedNode.spId);
+      crumbs.push(sp?.subprocess_name || selectedNode.spId);
+    }
+    return crumbs;
+  }, [selectedNode, selectedRunData, filteredTestCases, filteredProcesses, filteredSubProcesses]);
+
+  // Compute left column width for grid
+  const effectiveLeftWidth = isRunsCollapsed ? 48 : leftWidth;
+
   return (
     <div className="min-h-screen text-text-main flex flex-col p-2.5 gap-2.5 h-screen overflow-hidden">
       <Header
@@ -330,7 +354,7 @@ function App() {
       {/* Main Layout Grid */}
       <div
         className="grid gap-0 items-start h-[calc(100vh-160px)]"
-        style={{ gridTemplateColumns: `${leftWidth}px 14px minmax(200px, 1fr) 14px ${isValidationCollapsed ? 48 : rightWidth}px` }}
+        style={{ gridTemplateColumns: `${effectiveLeftWidth}px 14px minmax(200px, 1fr) 14px ${isValidationCollapsed ? 48 : rightWidth}px`, transition: 'grid-template-columns 0.28s ease' }}
       >
         <RunList
           runs={runs.map(r => r.data)}
@@ -338,11 +362,13 @@ function App() {
           selectedRunId={selectedRunId}
           setSelectedRunId={setSelectedRunId}
           calcRunProgress={calcRunProgress}
+          isCollapsed={isRunsCollapsed}
+          toggleCollapse={() => setIsRunsCollapsed(!isRunsCollapsed)}
         />
 
         {/* Left Resizer */}
         <div
-          className="w-[14px] h-full cursor-col-resize relative bg-transparent flex items-center justify-center select-none before:content-[''] before:absolute before:inset-y-0 before:w-[2px] before:bg-border-medium hover:before:bg-accent-primary transition-colors"
+          className={`w-[14px] h-full relative bg-transparent flex items-center justify-center select-none before:content-[''] before:absolute before:inset-y-0 before:w-[2px] before:bg-border-medium transition-colors ${isRunsCollapsed ? 'cursor-default' : 'cursor-col-resize hover:before:bg-accent-primary'}`}
           onMouseDown={startResizeLeft}
         />
 
@@ -368,6 +394,7 @@ function App() {
           isCollapsed={isValidationCollapsed}
           toggleCollapse={() => setIsValidationCollapsed(!isValidationCollapsed)}
           emptyMessage={selectedNode ? "No validations for this selection." : "Select a node in the Process Tree to filter validations."}
+          breadcrumb={breadcrumb}
         />
       </div>
 

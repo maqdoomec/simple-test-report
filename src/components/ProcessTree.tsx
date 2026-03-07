@@ -85,6 +85,10 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     const tcFinished = testCases.filter(t => t.status === 'PASS' || t.status === 'FAIL').length;
     const pct = tcCount === 0 ? 0 : Math.round((tcFinished / tcCount) * 100);
 
+    // Monitor compact strip data
+    const activeTC = testCases.find(t => t.status === 'RUNNING') || testCases[testCases.length - 1];
+    const activeProc = activeTC ? processes.find(p => p.testcase_id === activeTC.testcase_id && p.status === 'RUNNING') || processes.filter(p => p.testcase_id === activeTC.testcase_id).pop() : null;
+
     const isNodeSelected = (type: string, id: string) => {
         if (!selectedNode) return false;
         if (type === 'tc') return selectedNode.type === 'tc' && selectedNode.tcId === id;
@@ -112,6 +116,26 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                 </div>
             </div>
 
+            {/* Monitor Compact Strip */}
+            <div className="flex items-center gap-2.5 px-2.5 py-1.5 bg-black/20 text-[12px] overflow-hidden whitespace-nowrap shrink-0 mx-3 mt-2 rounded-[7px]">
+                <span className="text-text-muted">Run:</span>
+                <span className="text-accent-primary font-semibold truncate max-w-[30%]">{run.run_id}</span>
+                {activeTC && (
+                    <>
+                        <span className="text-text-muted">│</span>
+                        <span className="text-text-muted">TC:</span>
+                        <span className="text-text-main font-medium truncate max-w-[25%]">{activeTC.testcase_name || activeTC.testcase_id}</span>
+                    </>
+                )}
+                {activeProc && (
+                    <>
+                        <span className="text-text-muted">│</span>
+                        <span className="text-text-muted">Proc:</span>
+                        <span className="text-text-main font-medium truncate max-w-[25%]">{activeProc.process_name || activeProc.process_id}</span>
+                    </>
+                )}
+            </div>
+
             {/* Info Bar */}
             <div className="px-4 py-3 bg-white/[0.02] border-b border-border-light text-sm flex flex-col gap-1.5 shadow-inner">
                 <div className="flex justify-between font-mono text-accent-primary font-bold">
@@ -124,10 +148,10 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                 </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="h-1 bg-border-medium w-full overflow-hidden">
+            {/* Progress Bar - 10px height matching reference */}
+            <div className="h-2.5 bg-border-medium w-full overflow-hidden rounded-[6px] mx-0 shrink-0" style={{ margin: '12px 0' }}>
                 <div
-                    className={`h-full transition-all duration-300 ease-out ${run.status === 'PASS' || (run.status === 'FINISHED' && pct === 100) ? 'bg-status-pass shadow-status-pass/50' : run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'}`}
+                    className={`h-full rounded-[6px] transition-all duration-500 ease-out ${run.status === 'PASS' || (run.status === 'FINISHED' && pct === 100) ? 'bg-status-pass shadow-status-pass/50' : run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'}`}
                     style={{
                         width: `${pct}%`,
                         backgroundImage: run.status === 'RUNNING' ? 'linear-gradient(90deg, var(--color-status-running), #ff9900, var(--color-status-running))' : 'none',
