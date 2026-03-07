@@ -32,6 +32,7 @@ function App() {
   const [apiStatus, setApiStatus] = useState<'online' | 'offline'>('online');
   const [isValidationCollapsed, setIsValidationCollapsed] = useState(false);
   const [isRunsCollapsed, setIsRunsCollapsed] = useState(false);
+  const [isStatsCollapsed, setIsStatsCollapsed] = useState(false);
 
   // Data States
   const [runs, setRuns] = useState<{ data: RunNode }[]>([]);
