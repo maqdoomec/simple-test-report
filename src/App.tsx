@@ -345,13 +345,6 @@ function App() {
       )}
 
       <div className="relative">
-        <button
-          onClick={() => setIsStatsCollapsed(!isStatsCollapsed)}
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-10 bg-bg-panel border border-border-medium rounded-full w-6 h-6 flex items-center justify-center text-text-muted text-[10px] cursor-pointer transition-all duration-200 hover:text-text-main hover:bg-white/10"
-          title={isStatsCollapsed ? "Show Stats" : "Hide Stats"}
-        >
-          {isStatsCollapsed ? '▼' : '▲'}
-        </button>
         <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] mb-5 opacity-100'}`}>
           <StatCards
             totalRuns={stats.total}
@@ -363,6 +356,29 @@ function App() {
             passRateNum={stats.rateNum}
           />
         </div>
+        {/* Compact stats bar when collapsed */}
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-[40px] opacity-100 mb-2' : 'max-h-0 opacity-0 mb-0'}`}>
+          <div className="flex items-center justify-between bg-bg-card border border-border-medium rounded-lg px-4 py-1.5 text-[11px] font-medium">
+            <div className="flex items-center gap-4">
+              <span className="text-text-muted">Runs: <span className="text-text-main font-bold">{stats.total}</span></span>
+              <span className="text-status-pass">✓ {stats.pass}</span>
+              <span className="text-status-fail">✕ {stats.fail}</span>
+              <span className="text-status-running">⟳ {stats.running}</span>
+              <span className="text-status-pending">◌ {stats.pending}</span>
+              <span className="text-accent-primary font-bold">{stats.rate}</span>
+            </div>
+            <button
+              onClick={() => setIsStatsCollapsed(false)}
+              className="text-text-muted hover:text-text-main text-[10px] bg-transparent border-none cursor-pointer"
+              title="Expand Stats"
+            >▼ Expand</button>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsStatsCollapsed(!isStatsCollapsed)}
+          className={`absolute left-1/2 -translate-x-1/2 z-10 bg-bg-panel border border-border-medium rounded-full w-6 h-6 flex items-center justify-center text-text-muted text-[10px] cursor-pointer transition-all duration-200 hover:text-text-main hover:bg-white/10 ${isStatsCollapsed ? 'hidden' : '-bottom-2'}`}
+          title="Hide Stats"
+        >▲</button>
       </div>
 
       {/* Main Layout Grid */}
