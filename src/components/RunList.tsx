@@ -69,7 +69,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
     };
 
     return (
-        <div className="flex flex-col bg-bg-card rounded-[8px] border border-border-color overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300">
+        <div className="flex flex-col bg-bg-card rounded-[8px] border border-border-medium overflow-hidden h-full shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-300">
 
             {/* Header */}
             <div className="bg-bg-panel border-b border-border-color p-[15px] font-semibold flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.2)] shrink-0 gap-[10px]">
