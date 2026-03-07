@@ -325,7 +325,7 @@ function App() {
   const effectiveLeftWidth = isRunsCollapsed ? 48 : leftWidth;
 
   return (
-    <div className="min-h-screen text-text-main flex flex-col p-2.5 gap-2.5 h-screen overflow-hidden">
+    <div className="text-text-main flex flex-col p-2.5 gap-2.5 h-screen overflow-hidden">
       <Header
         useMockData={useMockData}
         toggleMockData={handleToggleMock}
@@ -339,13 +339,13 @@ function App() {
       />
 
       {useMockData && (
-        <div className="bg-status-fail/10 border border-status-fail/40 rounded-lg p-3 text-status-fail text-[13px] flex items-center justify-center gap-2.5 font-medium shadow-[0_4px_12px_rgba(244,63,94,0.05)]">
+        <div className="shrink-0 bg-status-fail/10 border border-status-fail/40 rounded-lg p-3 text-status-fail text-[13px] flex items-center justify-center gap-2.5 font-medium shadow-[0_4px_12px_rgba(244,63,94,0.05)]">
           <span className="text-[16px] leading-none">⚠</span> Displaying Mock Data
         </div>
       )}
 
-      <div className="relative">
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] mb-5 opacity-100'}`}>
+      <div className="relative shrink-0">
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isStatsCollapsed ? 'max-h-0 mb-0 opacity-0' : 'max-h-[200px] opacity-100'}`}>
           <StatCards
             totalRuns={stats.total}
             totalPassed={stats.pass}
@@ -383,7 +383,7 @@ function App() {
 
       {/* Main Layout Grid */}
       <div
-        className={`grid gap-0 items-stretch transition-all duration-300 ${isStatsCollapsed ? 'h-[calc(100vh-80px)]' : 'h-[calc(100vh-160px)]'}`}
+        className="grid gap-0 items-stretch flex-1 min-h-0"
         style={{ gridTemplateColumns: `${effectiveLeftWidth}px 14px minmax(200px, 1fr) 14px ${isValidationCollapsed ? 48 : rightWidth}px`, transition: 'grid-template-columns 0.28s ease' }}
       >
         <RunList

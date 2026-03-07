@@ -50,7 +50,7 @@ const StatCards: FC<StatCardsProps> = ({
     const passDash = passRateNum > 0 ? (passRateNum / 100) * C : 0;
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-[16px] mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-[16px]">
             <StatCard label="TOTAL RUNS" value={<span className="text-text-main">{totalRuns}</span>} />
             <StatCard label="PASSED" value={<span className="text-status-pass">{totalPassed}</span>} glowColor="hsla(160, 84%, 39%, 0.2)" />
             <StatCard label="FAILED" value={<span className="text-status-fail">{totalFailed}</span>} glowColor="hsla(350, 89%, 60%, 0.2)" />
