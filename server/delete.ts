@@ -162,11 +162,18 @@ async function deleteTypeItems(typeName: string, runId: string) {
 
     console.log(`Found ${items.length} items`);
 
-    for (const item of items) {
+    const PARALLEL_LIMIT = 20;
 
-        await deleteItem(typeName, item.id);
+    for (let i = 0; i < items.length; i += PARALLEL_LIMIT) {
 
-        console.log(`Deleted ${typeName} → ${item.id}`);
+        const batch = items.slice(i, i + PARALLEL_LIMIT);
+
+        await Promise.all(
+            batch.map(async (item) => {
+                await deleteItem(typeName, item.id);
+                console.log(`Deleted ${typeName} → ${item.id}`);
+            })
+        );
 
     }
 
