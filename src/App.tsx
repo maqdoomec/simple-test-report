@@ -224,11 +224,40 @@ function App() {
 
   // Derived Values & Filtering for View
 
+  const statusMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    // Level 1: SubProcesses (Checks Validations)
+    subProcesses.forEach(sp => {
+      const children = validations.filter(v => v.data.subprocess_id === sp.data.subprocess_id).map(v => v.data.status);
+      map.set(sp.data.subprocess_id, getEffectiveStatus(sp.data.status, children));
+    });
+
+    // Level 3: Processes (Checks SubProcesses)
+    processes.forEach(p => {
+      const children = subProcesses.filter(sp => sp.data.process_id === p.data.process_id).map(sp => map.get(sp.data.subprocess_id) as string);
+      map.set(p.data.process_id, getEffectiveStatus(p.data.status, children));
+    });
+
+    // Level 4: TestCases (Checks Processes)
+    testCases.forEach(tc => {
+      const children = processes.filter(p => p.data.testcase_id === tc.data.testcase_id).map(p => map.get(p.data.process_id) as string);
+      map.set(tc.data.testcase_id, getEffectiveStatus(tc.data.status, children));
+    });
+
+    // Level 5: Runs (Checks TestCases)
+    runs.forEach(r => {
+      const children = testCases.filter(tc => tc.data.run_id === r.data.run_id).map(tc => map.get(tc.data.testcase_id) as string);
+      map.set(r.data.run_id, getEffectiveStatus(r.data.status, children));
+    });
+
+    return map;
+  }, [runs, testCases, processes, subProcesses, validations]);
+
   const stats = useMemo(() => {
     let total = 0, pass = 0, fail = 0, running = 0, pending = 0;
     runs.forEach(r => {
-      const tcStatuses = testCases.filter(t => t.data.run_id === r.data.run_id).map(t => t.data.status);
-      const eff = getEffectiveStatus(r.data.status, tcStatuses);
+      const eff = statusMap.get(r.data.run_id) || r.data.status;
       total++;
       if (eff === 'PASS') pass++;
       else if (eff === 'FAIL') fail++;
@@ -238,7 +267,7 @@ function App() {
     const rateNum = total === 0 ? 0 : Math.round((pass / total) * 100);
     const rate = `${rateNum}%`;
     return { total, pass, fail, running, pending, rate, rateNum };
-  }, [runs, testCases]);
+  }, [runs, statusMap]);
 
   const calcRunProgress = useCallback((runId: string) => {
     const tcs = testCases.filter(t => t.data.run_id === runId);
@@ -247,25 +276,14 @@ function App() {
     let finishedCount = 0;
 
     tcs.forEach(t => {
-      const tcProcs = processes.filter(p => p.data.testcase_id === t.data.testcase_id);
-
-      const deepProcStatuses = tcProcs.map(p => {
-        const procSps = subProcesses.filter(s => s.data.process_id === p.data.process_id && s.data.testcase_id === t.data.testcase_id);
-        const deepSpStatuses = procSps.map(sp => {
-          const spVals = validations.filter(v => v.data.subprocess_id === sp.data.subprocess_id);
-          return getEffectiveStatus(sp.data.status, spVals.map(v => v.data.status));
-        });
-        return getEffectiveStatus(p.data.status, deepSpStatuses);
-      });
-
-      const eff = getEffectiveStatus(t.data.status, deepProcStatuses);
+      const eff = statusMap.get(t.data.testcase_id) || t.data.status;
       if (eff === 'PASS' || eff === 'FAIL') {
         finishedCount++;
       }
     });
 
     return Math.round((finishedCount / tcs.length) * 100);
-  }, [testCases, processes, subProcesses, validations]);
+  }, [testCases, statusMap]);
 
   // Set default run selection
   useEffect(() => {
@@ -403,6 +421,7 @@ function App() {
           processes={processes.map(p => p.data)}
           subProcesses={subProcesses.map(s => s.data)}
           validations={validations.map(v => v.data)}
+          statusMap={statusMap}
           selectedRunId={selectedRunId}
           setSelectedRunId={setSelectedRunId}
           calcRunProgress={calcRunProgress}
@@ -422,6 +441,7 @@ function App() {
           processes={filteredProcesses}
           subProcesses={filteredSubProcesses}
           validations={validations.map(v => v.data)}
+          statusMap={statusMap}
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
           collapsedNodes={collapsedNodes}
@@ -461,7 +481,7 @@ function App() {
       </div>
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-    </div>
+    </div >
   );
 }
 

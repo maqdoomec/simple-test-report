@@ -9,6 +9,7 @@ interface RunListProps {
     processes: ProcessNode[];
     subProcesses: SubProcessNode[];
     validations: ValidationItem[];
+    statusMap: Map<string, string>;
     selectedRunId: string | null;
     setSelectedRunId: (id: string) => void;
     calcRunProgress: (runId: string) => number;
@@ -16,7 +17,7 @@ interface RunListProps {
     toggleCollapse: () => void;
 }
 
-const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, validations, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
+const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, validations, statusMap, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
     const [searchValue, setSearchValue] = useState("");
     const [activeFilter, setActiveFilter] = useState("ALL");
 
@@ -51,8 +52,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, v
         });
         testCases.forEach(tc => {
             if (stats[tc.run_id]) {
-                const procStatuses = processes.filter(p => p.testcase_id === tc.testcase_id).map(p => p.status);
-                const effStatus = getEffectiveStatus(tc.status, procStatuses);
+                const effStatus = statusMap.get(tc.testcase_id) || tc.status;
 
                 stats[tc.run_id].total++;
                 if (effStatus === 'PASS') stats[tc.run_id].pass++;
@@ -61,25 +61,11 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, v
             }
         });
         return stats;
-    }, [runs, testCases, processes]);
+    }, [runs, testCases, statusMap]);
 
     const filteredRuns = useMemo(() => {
         return runs.filter(r => {
-            const effRunStatus = getEffectiveStatus(
-                r.status,
-                testCases.filter(t => t.run_id === r.run_id).map(t => {
-                    const tcProcs = processes.filter(p => p.testcase_id === t.testcase_id);
-                    const deepProcStatuses = tcProcs.map(p => {
-                        const procSps = subProcesses.filter(s => s.process_id === p.process_id && s.testcase_id === t.testcase_id);
-                        const deepSpStatuses = procSps.map(sp => {
-                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
-                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
-                        });
-                        return getEffectiveStatus(p.status, deepSpStatuses);
-                    });
-                    return getEffectiveStatus(t.status, deepProcStatuses);
-                })
-            );
+            const effRunStatus = statusMap.get(r.run_id) || r.status;
 
             if (activeFilter !== 'ALL' && effRunStatus !== activeFilter) return false;
             if (searchValue && !r.run_id.toLowerCase().includes(searchValue.toLowerCase()) &&
@@ -88,7 +74,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, v
             }
             return true;
         });
-    }, [runs, testCases, processes, subProcesses, validations, activeFilter, searchValue]);
+    }, [runs, statusMap, activeFilter, searchValue]);
 
     const handleFilterClick = (filter: string) => {
         setActiveFilter(filter);
@@ -207,21 +193,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, v
                             const pct = calcRunProgress(run.run_id);
                             const stats = runStats[run.run_id] || { pass: 0, fail: 0, running: 0, total: 0 };
 
-                            const effRunStatus = getEffectiveStatus(
-                                run.status,
-                                testCases.filter(t => t.run_id === run.run_id).map(t => {
-                                    const tcProcs = processes.filter(p => p.testcase_id === t.testcase_id);
-                                    const deepProcStatuses = tcProcs.map(p => {
-                                        const procSps = subProcesses.filter(s => s.process_id === p.process_id && s.testcase_id === t.testcase_id);
-                                        const deepSpStatuses = procSps.map(sp => {
-                                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
-                                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
-                                        });
-                                        return getEffectiveStatus(p.status, deepSpStatuses);
-                                    });
-                                    return getEffectiveStatus(t.status, deepProcStatuses);
-                                })
-                            );
+                            const effRunStatus = statusMap.get(run.run_id) || run.status;
 
                             return (
                                 <div
