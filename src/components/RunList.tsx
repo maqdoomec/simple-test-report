@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo, type FC } from 'react';
-import type { RunNode, TestCaseNode, ProcessNode } from './ProcessTree';
+import type { RunNode, TestCaseNode, ProcessNode, SubProcessNode } from './ProcessTree';
+import type { ValidationItem } from './ValidationStream';
 import { getEffectiveStatus } from '../utils';
 
 interface RunListProps {
     runs: RunNode[];
     testCases: TestCaseNode[];
     processes: ProcessNode[];
+    subProcesses: SubProcessNode[];
+    validations: ValidationItem[];
     selectedRunId: string | null;
     setSelectedRunId: (id: string) => void;
     calcRunProgress: (runId: string) => number;
@@ -13,7 +16,7 @@ interface RunListProps {
     toggleCollapse: () => void;
 }
 
-const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
+const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, validations, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
     const [searchValue, setSearchValue] = useState("");
     const [activeFilter, setActiveFilter] = useState("ALL");
 
@@ -62,14 +65,30 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, 
 
     const filteredRuns = useMemo(() => {
         return runs.filter(r => {
-            if (activeFilter !== 'ALL' && r.status !== activeFilter) return false;
+            const effRunStatus = getEffectiveStatus(
+                r.status,
+                testCases.filter(t => t.run_id === r.run_id).map(t => {
+                    const tcProcs = processes.filter(p => p.testcase_id === t.testcase_id);
+                    const deepProcStatuses = tcProcs.map(p => {
+                        const procSps = subProcesses.filter(s => s.process_id === p.process_id && s.testcase_id === t.testcase_id);
+                        const deepSpStatuses = procSps.map(sp => {
+                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
+                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
+                        });
+                        return getEffectiveStatus(p.status, deepSpStatuses);
+                    });
+                    return getEffectiveStatus(t.status, deepProcStatuses);
+                })
+            );
+
+            if (activeFilter !== 'ALL' && effRunStatus !== activeFilter) return false;
             if (searchValue && !r.run_id.toLowerCase().includes(searchValue.toLowerCase()) &&
                 !(r.run_name || '').toLowerCase().includes(searchValue.toLowerCase())) {
                 return false;
             }
             return true;
         });
-    }, [runs, activeFilter, searchValue]);
+    }, [runs, testCases, processes, subProcesses, validations, activeFilter, searchValue]);
 
     const handleFilterClick = (filter: string) => {
         setActiveFilter(filter);
@@ -188,6 +207,22 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, 
                             const pct = calcRunProgress(run.run_id);
                             const stats = runStats[run.run_id] || { pass: 0, fail: 0, running: 0, total: 0 };
 
+                            const effRunStatus = getEffectiveStatus(
+                                run.status,
+                                testCases.filter(t => t.run_id === run.run_id).map(t => {
+                                    const tcProcs = processes.filter(p => p.testcase_id === t.testcase_id);
+                                    const deepProcStatuses = tcProcs.map(p => {
+                                        const procSps = subProcesses.filter(s => s.process_id === p.process_id && s.testcase_id === t.testcase_id);
+                                        const deepSpStatuses = procSps.map(sp => {
+                                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
+                                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
+                                        });
+                                        return getEffectiveStatus(p.status, deepSpStatuses);
+                                    });
+                                    return getEffectiveStatus(t.status, deepProcStatuses);
+                                })
+                            );
+
                             return (
                                 <div
                                     key={run.run_id}
@@ -201,11 +236,11 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, 
                                         <span className="font-mono text-[13px] font-bold text-accent-primary truncate max-w-[calc(100%-60px)]">
                                             {run.run_id}
                                         </span>
-                                        <span className={`px-[6px] py-[2px] rounded-[3px] text-[10px] font-bold shadow-sm shrink-0 whitespace-nowrap ml-1 ${run.status === 'PASS' ? 'bg-status-pass text-white' :
-                                            run.status === 'FAIL' ? 'bg-status-fail text-white' :
-                                                run.status === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending text-white'
+                                        <span className={`px-[6px] py-[2px] rounded-[3px] text-[10px] font-bold shadow-sm shrink-0 whitespace-nowrap ml-1 ${effRunStatus === 'PASS' ? 'bg-status-pass text-white' :
+                                            effRunStatus === 'FAIL' ? 'bg-status-fail text-white' :
+                                                effRunStatus === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending text-white'
                                             }`}>
-                                            {run.status}
+                                            {effRunStatus}
                                         </span>
                                     </div>
 
@@ -224,13 +259,12 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, 
                                     {/* Progress Bar */}
                                     <div className="h-[4px] bg-border-medium rounded-[2px] overflow-hidden relative z-10 w-full mt-2">
                                         <div
-                                            className={`h-full transition-all duration-300 shadow ${run.status === 'PASS' ? 'bg-status-pass shadow-status-pass/50' :
-                                                run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'
+                                            className={`h-full transition-all duration-300 shadow ${effRunStatus === 'PASS' ? 'bg-status-pass shadow-status-pass/50' :
+                                                effRunStatus === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : effRunStatus === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'
                                                 }`}
                                             style={{
                                                 width: `${pct}%`,
-                                                backgroundImage: run.status === 'RUNNING' ? 'linear-gradient(90deg, var(--color-status-running), #ff9900, var(--color-status-running))' : 'none',
-                                                backgroundSize: run.status === 'RUNNING' ? '200% 100%' : 'auto'
+                                                backgroundImage: effRunStatus === 'RUNNING' ? 'linear-gradient(90deg, var(--color-status-running), #ff9900, var(--color-status-running))' : 'none',
                                             }}
                                         />
                                     </div>

@@ -32,6 +32,8 @@ export interface SubProcessNode {
     run_id: string;
 }
 
+import type { ValidationItem } from './ValidationStream';
+
 export type SelectedNode = {
     type: 'tc' | 'proc' | 'sp';
     tcId: string;
@@ -45,6 +47,7 @@ interface ProcessTreeProps {
     testCases: TestCaseNode[];
     processes: ProcessNode[];
     subProcesses: SubProcessNode[];
+    validations: ValidationItem[];
     selectedNode: SelectedNode;
     setSelectedNode: (node: SelectedNode) => void;
     collapsedNodes: Record<string, boolean>;
@@ -58,6 +61,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     testCases,
     processes,
     subProcesses,
+    validations,
     selectedNode,
     setSelectedNode,
     collapsedNodes,
@@ -196,7 +200,18 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                     const isCollapsed = collapsedNodes[tcId];
                     const tcProcs = processes.filter(p => p.testcase_id === tcId && p.run_id === run.run_id);
                     const hasChildren = tcProcs.length > 0;
-                    const tcStatus = getEffectiveStatus(tc.status, tcProcs.map(p => p.status));
+
+                    // We must calculate deep Status for Process to get accurate TC Status
+                    const deepProcStatuses = tcProcs.map(p => {
+                        const procSps = subProcesses.filter(s => s.process_id === p.process_id && s.testcase_id === tcId && s.run_id === run.run_id);
+                        const deepSpStatuses = procSps.map(sp => {
+                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
+                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
+                        });
+                        return getEffectiveStatus(p.status, deepSpStatuses);
+                    });
+
+                    const tcStatus = getEffectiveStatus(tc.status, deepProcStatuses);
 
                     return (
                         <div key={tcId} className="mb-2">
@@ -238,7 +253,13 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                         const pCollapsed = collapsedNodes[procId];
                                         const procSps = subProcesses.filter(s => s.process_id === procId && s.testcase_id === tcId && s.run_id === run.run_id);
                                         const pHasChildren = procSps.length > 0;
-                                        const procStatus = getEffectiveStatus(proc.status, procSps.map(s => s.status));
+
+                                        // Calculate deep status for SPs to get accurate Proc status
+                                        const deepSpStatuses = procSps.map(sp => {
+                                            const spVals = validations.filter(v => v.subprocess_id === sp.subprocess_id);
+                                            return getEffectiveStatus(sp.status, spVals.map(v => v.status));
+                                        });
+                                        const procStatus = getEffectiveStatus(proc.status, deepSpStatuses);
 
                                         return (
                                             <div key={procId} className="flex flex-col">
@@ -273,10 +294,8 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                                     <div className="ml-4 pl-2 border-l border-border-light/50 mt-0.5 flex flex-col gap-0.5">
                                                         {procSps.map(sp => {
                                                             const spId = sp.subprocess_id;
-                                                            // We derive SubProcess status from validations normally, but here we don't have validations.
-                                                            // However, dashbord.html didn't either inside its `updateMonitor`? Wait, updateMonitor used `globalValidations`.
-                                                            // ProcessTree.tsx originally used sp.status directly, but let's keep it simple or use getEffectiveStatus(sp.status, [])
-                                                            const spStatus = getEffectiveStatus(sp.status, []);
+                                                            const spVals = validations.filter(v => v.subprocess_id === spId);
+                                                            const spStatus = getEffectiveStatus(sp.status, spVals.map(v => v.status));
                                                             return (
                                                                 <div
                                                                     key={spId}

@@ -243,13 +243,29 @@ function App() {
   const calcRunProgress = useCallback((runId: string) => {
     const tcs = testCases.filter(t => t.data.run_id === runId);
     if (tcs.length === 0) return 0;
-    const finishedCount = tcs.filter(t => {
-      const procStatuses = processes.filter(p => p.data.testcase_id === t.data.testcase_id).map(p => p.data.status);
-      const eff = getEffectiveStatus(t.data.status, procStatuses);
-      return eff === 'PASS' || eff === 'FAIL';
-    }).length;
+
+    let finishedCount = 0;
+
+    tcs.forEach(t => {
+      const tcProcs = processes.filter(p => p.data.testcase_id === t.data.testcase_id);
+
+      const deepProcStatuses = tcProcs.map(p => {
+        const procSps = subProcesses.filter(s => s.data.process_id === p.data.process_id && s.data.testcase_id === t.data.testcase_id);
+        const deepSpStatuses = procSps.map(sp => {
+          const spVals = validations.filter(v => v.data.subprocess_id === sp.data.subprocess_id);
+          return getEffectiveStatus(sp.data.status, spVals.map(v => v.data.status));
+        });
+        return getEffectiveStatus(p.data.status, deepSpStatuses);
+      });
+
+      const eff = getEffectiveStatus(t.data.status, deepProcStatuses);
+      if (eff === 'PASS' || eff === 'FAIL') {
+        finishedCount++;
+      }
+    });
+
     return Math.round((finishedCount / tcs.length) * 100);
-  }, [testCases, processes]);
+  }, [testCases, processes, subProcesses, validations]);
 
   // Set default run selection
   useEffect(() => {
@@ -385,6 +401,8 @@ function App() {
           runs={runs.map(r => r.data)}
           testCases={testCases.map(t => t.data)}
           processes={processes.map(p => p.data)}
+          subProcesses={subProcesses.map(s => s.data)}
+          validations={validations.map(v => v.data)}
           selectedRunId={selectedRunId}
           setSelectedRunId={setSelectedRunId}
           calcRunProgress={calcRunProgress}
@@ -403,6 +421,7 @@ function App() {
           testCases={filteredTestCases}
           processes={filteredProcesses}
           subProcesses={filteredSubProcesses}
+          validations={validations.map(v => v.data)}
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
           collapsedNodes={collapsedNodes}
