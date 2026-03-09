@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { getEffectiveStatus } from '../utils';
 
 // Type Definitions
 export interface RunNode {
@@ -86,7 +87,11 @@ const ProcessTree: FC<ProcessTreeProps> = ({
 
     // Calculate run completion metrics
     const tcCount = testCases.length;
-    const tcFinished = testCases.filter(t => t.status === 'PASS' || t.status === 'FAIL').length;
+    const tcFinished = testCases.filter(t => {
+        const procStatuses = processes.filter(p => p.testcase_id === t.testcase_id).map(p => p.status);
+        const eff = getEffectiveStatus(t.status, procStatuses);
+        return eff === 'PASS' || eff === 'FAIL';
+    }).length;
     const pct = tcCount === 0 ? 0 : Math.round((tcFinished / tcCount) * 100);
 
     // Monitor compact strip data
@@ -191,6 +196,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                     const isCollapsed = collapsedNodes[tcId];
                     const tcProcs = processes.filter(p => p.testcase_id === tcId && p.run_id === run.run_id);
                     const hasChildren = tcProcs.length > 0;
+                    const tcStatus = getEffectiveStatus(tc.status, tcProcs.map(p => p.status));
 
                     return (
                         <div key={tcId} className="mb-2">
@@ -203,13 +209,13 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                 onClick={() => setSelectedNode({ type: 'tc', tcId, runId: run.run_id })}
                             >
                                 {/* Status Dot */}
-                                <span className={`w-2.5 h-2.5 rounded-full mr-3 shrink-0 ${tc.status === 'PASS' ? 'bg-status-pass shadow-[0_0_4px_var(--color-status-pass)]' :
-                                    tc.status === 'FAIL' ? 'bg-status-fail shadow-[0_0_4px_var(--color-status-fail)]' :
-                                        tc.status === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
+                                <span className={`w-2.5 h-2.5 rounded-full mr-3 shrink-0 ${tcStatus === 'PASS' ? 'bg-status-pass shadow-[0_0_4px_var(--color-status-pass)]' :
+                                    tcStatus === 'FAIL' ? 'bg-status-fail shadow-[0_0_4px_var(--color-status-fail)]' :
+                                        tcStatus === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
                                     }`} />
 
                                 {/* Name */}
-                                <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-semibold ${tc.status === 'FAIL' ? 'text-status-fail' : 'text-text-main'}`}>
+                                <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-semibold ${tcStatus === 'FAIL' ? 'text-status-fail' : 'text-text-main'}`}>
                                     {tcId}: {tc.testcase_name || 'Unnamed TestCase'}
                                 </span>
 
@@ -232,6 +238,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                         const pCollapsed = collapsedNodes[procId];
                                         const procSps = subProcesses.filter(s => s.process_id === procId && s.testcase_id === tcId && s.run_id === run.run_id);
                                         const pHasChildren = procSps.length > 0;
+                                        const procStatus = getEffectiveStatus(proc.status, procSps.map(s => s.status));
 
                                         return (
                                             <div key={procId} className="flex flex-col">
@@ -252,11 +259,11 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                                     ) : (
                                                         <span className="w-[18px] h-[18px] flex items-center justify-center mr-1 text-border-medium">-</span>
                                                     )}
-                                                    <span className={`w-2 h-2 rounded-full mr-1.5 shrink-0 ${proc.status === 'PASS' ? 'bg-status-pass' :
-                                                        proc.status === 'FAIL' ? 'bg-status-fail' :
-                                                            proc.status === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
+                                                    <span className={`w-2 h-2 rounded-full mr-1.5 shrink-0 ${procStatus === 'PASS' ? 'bg-status-pass' :
+                                                        procStatus === 'FAIL' ? 'bg-status-fail' :
+                                                            procStatus === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
                                                         }`} />
-                                                    <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-90 ${proc.status === 'FAIL' ? 'text-status-fail opacity-100 font-semibold' : ''}`}>
+                                                    <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-90 ${procStatus === 'FAIL' ? 'text-status-fail opacity-100 font-semibold' : ''}`}>
                                                         {proc.process_name || procId}
                                                     </span>
                                                 </div>
@@ -266,6 +273,10 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                                     <div className="ml-4 pl-2 border-l border-border-light/50 mt-0.5 flex flex-col gap-0.5">
                                                         {procSps.map(sp => {
                                                             const spId = sp.subprocess_id;
+                                                            // We derive SubProcess status from validations normally, but here we don't have validations.
+                                                            // However, dashbord.html didn't either inside its `updateMonitor`? Wait, updateMonitor used `globalValidations`.
+                                                            // ProcessTree.tsx originally used sp.status directly, but let's keep it simple or use getEffectiveStatus(sp.status, [])
+                                                            const spStatus = getEffectiveStatus(sp.status, []);
                                                             return (
                                                                 <div
                                                                     key={spId}
@@ -276,11 +287,11 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                                                     onClick={() => setSelectedNode({ type: 'sp', tcId, procId, spId, runId: run.run_id })}
                                                                 >
                                                                     <span className="w-[14px] h-[14px] flex items-center justify-center mr-1 opacity-0"></span>
-                                                                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 ${sp.status === 'PASS' ? 'bg-status-pass' :
-                                                                        sp.status === 'FAIL' ? 'bg-status-fail' :
-                                                                            sp.status === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
+                                                                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 ${spStatus === 'PASS' ? 'bg-status-pass' :
+                                                                        spStatus === 'FAIL' ? 'bg-status-fail' :
+                                                                            spStatus === 'RUNNING' ? 'bg-status-running shadow-[0_0_8px_var(--color-status-running)] animate-pulse-running' : 'bg-status-pending'
                                                                         }`} />
-                                                                    <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-80 ${sp.status === 'FAIL' ? 'text-status-fail opacity-100 font-medium' : ''}`}>
+                                                                    <span className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap opacity-80 ${spStatus === 'FAIL' ? 'text-status-fail opacity-100 font-medium' : ''}`}>
                                                                         {sp.subprocess_name || spId}
                                                                     </span>
                                                                 </div>

@@ -8,6 +8,7 @@ import RunList from './components/RunList';
 import ToastContainer, { type ToastMessage, type ToastType } from './components/ToastContainer';
 import { mockRuns, mockTestCases, mockProcesses, mockSubProcesses, mockValidations } from './mockData';
 
+import { getEffectiveStatus } from './utils';
 const API_BASE = 'http://localhost:3000/api';
 
 function App() {
@@ -222,16 +223,6 @@ function App() {
   };
 
   // Derived Values & Filtering for View
-  const getEffectiveStatus = (baseStatus: string, childStatuses: string[]) => {
-    if (['PASS', 'FAIL', 'RUNNING'].includes(baseStatus)) return baseStatus;
-    if (childStatuses.includes('RUNNING')) return 'RUNNING';
-    if (childStatuses.includes('FAIL')) return 'FAIL';
-    const hasPass = childStatuses.includes('PASS');
-    const hasPending = childStatuses.includes('PENDING');
-    if (hasPass && !hasPending) return 'PASS';
-    if (hasPass && hasPending) return 'RUNNING';
-    return 'PENDING';
-  };
 
   const stats = useMemo(() => {
     let total = 0, pass = 0, fail = 0, running = 0, pending = 0;
@@ -252,9 +243,13 @@ function App() {
   const calcRunProgress = useCallback((runId: string) => {
     const tcs = testCases.filter(t => t.data.run_id === runId);
     if (tcs.length === 0) return 0;
-    const finished = tcs.filter(t => t.data.status === 'PASS' || t.data.status === 'FAIL').length;
-    return Math.round((finished / tcs.length) * 100);
-  }, [testCases]);
+    const finishedCount = tcs.filter(t => {
+      const procStatuses = processes.filter(p => p.data.testcase_id === t.data.testcase_id).map(p => p.data.status);
+      const eff = getEffectiveStatus(t.data.status, procStatuses);
+      return eff === 'PASS' || eff === 'FAIL';
+    }).length;
+    return Math.round((finishedCount / tcs.length) * 100);
+  }, [testCases, processes]);
 
   // Set default run selection
   useEffect(() => {
@@ -306,7 +301,7 @@ function App() {
     // if (selectedRunData) crumbs.push(selectedRunData.run_name || selectedRunData.run_id);
     if (selectedRunData) crumbs.push(selectedRunData.run_id);
     if (selectedNode.tcId) {
-      
+
       // crumbs.push(tc?.testcase_name || selectedNode.tcId);
       crumbs.push(selectedNode.tcId);
     }
@@ -389,6 +384,7 @@ function App() {
         <RunList
           runs={runs.map(r => r.data)}
           testCases={testCases.map(t => t.data)}
+          processes={processes.map(p => p.data)}
           selectedRunId={selectedRunId}
           setSelectedRunId={setSelectedRunId}
           calcRunProgress={calcRunProgress}

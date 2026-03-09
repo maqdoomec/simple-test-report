@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, type FC } from 'react';
-import type { RunNode, TestCaseNode } from './ProcessTree';
+import type { RunNode, TestCaseNode, ProcessNode } from './ProcessTree';
+import { getEffectiveStatus } from '../utils';
 
 interface RunListProps {
     runs: RunNode[];
     testCases: TestCaseNode[];
+    processes: ProcessNode[];
     selectedRunId: string | null;
     setSelectedRunId: (id: string) => void;
     calcRunProgress: (runId: string) => number;
@@ -11,7 +13,7 @@ interface RunListProps {
     toggleCollapse: () => void;
 }
 
-const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
+const RunList: FC<RunListProps> = ({ runs, testCases, processes, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
     const [searchValue, setSearchValue] = useState("");
     const [activeFilter, setActiveFilter] = useState("ALL");
 
@@ -46,14 +48,17 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
         });
         testCases.forEach(tc => {
             if (stats[tc.run_id]) {
+                const procStatuses = processes.filter(p => p.testcase_id === tc.testcase_id).map(p => p.status);
+                const effStatus = getEffectiveStatus(tc.status, procStatuses);
+
                 stats[tc.run_id].total++;
-                if (tc.status === 'PASS') stats[tc.run_id].pass++;
-                else if (tc.status === 'FAIL') stats[tc.run_id].fail++;
-                else if (tc.status === 'RUNNING') stats[tc.run_id].running++;
+                if (effStatus === 'PASS') stats[tc.run_id].pass++;
+                else if (effStatus === 'FAIL') stats[tc.run_id].fail++;
+                else if (effStatus === 'RUNNING') stats[tc.run_id].running++;
             }
         });
         return stats;
-    }, [runs, testCases]);
+    }, [runs, testCases, processes]);
 
     const filteredRuns = useMemo(() => {
         return runs.filter(r => {
@@ -197,8 +202,8 @@ const RunList: FC<RunListProps> = ({ runs, testCases, selectedRunId, setSelected
                                             {run.run_id}
                                         </span>
                                         <span className={`px-[6px] py-[2px] rounded-[3px] text-[10px] font-bold shadow-sm shrink-0 whitespace-nowrap ml-1 ${run.status === 'PASS' ? 'bg-status-pass text-white' :
-                                                run.status === 'FAIL' ? 'bg-status-fail text-white' :
-                                                    run.status === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending text-white'
+                                            run.status === 'FAIL' ? 'bg-status-fail text-white' :
+                                                run.status === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending text-white'
                                             }`}>
                                             {run.status}
                                         </span>
