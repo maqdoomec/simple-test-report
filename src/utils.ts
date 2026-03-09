@@ -1,24 +1,33 @@
 export const getEffectiveStatus = (rawStatus: string, childEffectiveStatuses: string[] = []): string => {
-    // SCENARIO 1: Parent literally failed (e.g., Timeout, Exception).
-    // In this case, the parent failed regardless of whatever the children are doing.
+
+    // If the parent itself has failed, the effective status is FAIL regardless of children
     if (rawStatus === 'FAIL') return 'FAIL';
 
-    // SCENARIO 2: A child explicitly failed.
-    // Even if the parent finished or is still running, a failed child ruins the parent.
-    if (childEffectiveStatuses.includes('FAIL')) return 'FAIL';
+    // If the API already reports PASS, we accept it as PASS
+    if (rawStatus === 'PASS') return 'PASS';
 
-    // SCENARIO 3: Parent is explicitly FINISHED (or PASS) by the API.
-    // If the API says the parent is FINISHED, but a child is still RUNNING,
-    // the child is likely abandoned/orphaned. The parent is officially done.
-    if (rawStatus === 'FINISHED' || rawStatus === 'PASS') {
-        // If no children failed (checked above), the parent PASSES.
-        return 'PASS';
+    // If the parent execution is currently running, return RUNNING
+    if (rawStatus === 'RUNNING') return 'RUNNING';
+
+    // If the parent is marked as FINISHED by the API,
+    // we verify if any child actually failed
+    if (rawStatus === 'FINISHED') {
+
+        // If any child has FAIL status, propagate the failure to the parent
+        if (childEffectiveStatuses.includes('FAIL'))
+            return 'FAIL';
+
+        // Otherwise the execution is considered successful
+        else
+            return 'PASS';
     }
 
-    // SCENARIO 4: Parent is NOT finished.
-    // If the parent is PENDING/RUNNING, and ANY child is RUNNING, the parent is RUNNING.
-    if (rawStatus === 'RUNNING' || childEffectiveStatuses.includes('RUNNING')) return 'RUNNING';
 
-    // SCENARIO 5: Default fallback (e.g., PENDING without running children)
+    // Previously this handled cases where a child RUNNING should propagate to parent,
+    // but it has been intentionally disabled
+    // if (rawStatus === 'RUNNING' || childEffectiveStatuses.includes('RUNNING')) return 'RUNNING';
+
+
+    // Fallback: return the raw status if none of the above conditions match
     return rawStatus;
 };
