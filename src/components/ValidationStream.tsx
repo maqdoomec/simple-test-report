@@ -35,13 +35,24 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
     const containerRef = useRef<HTMLDivElement>(null);
     const [searchValue, setSearchValue] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+    const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
 
     // Auto-scroll to bottom
     useEffect(() => {
-        if (containerRef.current) {
+        if (isAutoScrollEnabled && containerRef.current) {
             containerRef.current.scrollTop = containerRef.current.scrollHeight;
         }
-    }, [validations]);
+    }, [validations, isAutoScrollEnabled]);
+
+    const scrollToTop = () => {
+        containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const scrollToBottom = () => {
+        if (containerRef.current) {
+            containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    };
 
     const filteredValidations = useMemo(() => {
         return validations.filter(v => {
@@ -85,7 +96,16 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
                         <span className="flex-1 text-center font-semibold text-text-main uppercase tracking-wider text-xs">
                             Validation Stream
                         </span>
-                        <span className="text-[11px] text-text-muted font-normal">(Auto)</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-text-muted font-normal">Auto-scroll</span>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsAutoScrollEnabled(!isAutoScrollEnabled); }}
+                                className={`w-7 h-4 rounded-full relative transition-colors duration-200 focus:outline-none ${isAutoScrollEnabled ? 'bg-accent-primary' : 'bg-bg-panel border border-border-medium'}`}
+                                title={isAutoScrollEnabled ? "Disable Auto-scroll" : "Enable Auto-scroll"}
+                            >
+                                <div className={`w-3 h-3 rounded-full bg-white absolute top-[1px] transition-transform duration-200 ${isAutoScrollEnabled ? 'translate-x-[14px]' : 'translate-x-[1px]'}`} />
+                            </button>
+                        </div>
                     </>
                 )}
             </div>
@@ -234,6 +254,30 @@ const ValidationStream: FC<ValidationStreamProps> = ({ validations, isCollapsed,
                             );
                         })
                     )}
+                </div>
+            )}
+
+            {/* Scroll Nav Buttons */}
+            {!isCollapsed && (
+                <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); scrollToTop(); }}
+                        className="w-8 h-8 rounded-full bg-bg-panel border border-border-medium text-text-muted flex items-center justify-center hover:bg-white/10 hover:text-text-main shadow-md transition-colors"
+                        title="Scroll to Top"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); scrollToBottom(); }}
+                        className="w-8 h-8 rounded-full bg-bg-panel border border-border-medium text-text-muted flex items-center justify-center hover:bg-white/10 hover:text-text-main shadow-md transition-colors"
+                        title="Scroll to Bottom"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
                 </div>
             )}
         </div>
