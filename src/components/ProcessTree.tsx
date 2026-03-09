@@ -99,8 +99,8 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     const pct = tcCount === 0 ? 0 : Math.round((tcFinished / tcCount) * 100);
 
     // Monitor compact strip data
-    const activeTC = testCases.find(t => t.status === 'RUNNING') || testCases[testCases.length - 1];
-    const activeProc = activeTC ? processes.find(p => p.testcase_id === activeTC.testcase_id && p.status === 'RUNNING') || processes.filter(p => p.testcase_id === activeTC.testcase_id).pop() : null;
+    const activeTC = testCases.find(t => (statusMap.get(`${t.run_id}:${t.testcase_id}`) || t.status) === 'RUNNING') || testCases[testCases.length - 1];
+    const activeProc = activeTC ? processes.find(p => p.testcase_id === activeTC.testcase_id && (statusMap.get(`${p.run_id}:${p.process_id}`) || p.status) === 'RUNNING') || processes.filter(p => p.testcase_id === activeTC.testcase_id).pop() : null;
 
     const isNodeSelected = (type: string, id: string) => {
         if (!selectedNode) return false;
@@ -141,12 +141,17 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                         </svg>
                     </button>
                 </div>
-                <div className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shadow shadow-black/20 ${run.status === 'PASS' || (run.status === 'FINISHED' && pct === 100 && tcFinished === tcCount && !testCases.some(t => t.status === 'FAIL')) ? 'bg-status-pass' :
-                    run.status === 'FAIL' ? 'bg-status-fail' :
-                        run.status === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending'
-                    }`}>
-                    {run.status}
-                </div>
+                {(() => {
+                    const effRunStatus = statusMap.get(run.run_id) || run.status;
+                    return (
+                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shadow shadow-black/20 ${effRunStatus === 'PASS' ? 'bg-status-pass' :
+                            effRunStatus === 'FAIL' ? 'bg-status-fail' :
+                                effRunStatus === 'RUNNING' ? 'bg-status-running text-black animate-blink-running' : 'bg-status-pending'
+                            }`}>
+                            {effRunStatus}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Monitor Compact Strip */}
@@ -183,14 +188,19 @@ const ProcessTree: FC<ProcessTreeProps> = ({
 
             {/* Progress Bar - 10px height matching reference */}
             <div className="h-2.5 bg-border-medium w-full overflow-hidden rounded-[6px] mx-0 shrink-0" style={{ margin: '12px 0' }}>
-                <div
-                    className={`h-full rounded-[6px] transition-all duration-500 ease-out ${run.status === 'PASS' || (run.status === 'FINISHED' && pct === 100) ? 'bg-status-pass shadow-status-pass/50' : run.status === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : run.status === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'}`}
-                    style={{
-                        width: `${pct}%`,
-                        backgroundImage: run.status === 'RUNNING' ? 'linear-gradient(90deg, var(--color-status-running), #ff9900, var(--color-status-running))' : 'none',
-                        backgroundSize: run.status === 'RUNNING' ? '200% 100%' : 'auto'
-                    }}
-                />
+                {(() => {
+                    const effRunStatus = statusMap.get(run.run_id) || run.status;
+                    return (
+                        <div
+                            className={`h-full rounded-[6px] transition-all duration-500 ease-out ${effRunStatus === 'PASS' ? 'bg-status-pass shadow-status-pass/50' : effRunStatus === 'FAIL' ? 'bg-status-fail shadow-status-fail/50' : effRunStatus === 'RUNNING' ? 'bg-status-running animate-shimmer' : 'bg-status-pending'}`}
+                            style={{
+                                width: `${pct}%`,
+                                backgroundImage: effRunStatus === 'RUNNING' ? 'linear-gradient(90deg, var(--color-status-running), #ff9900, var(--color-status-running))' : 'none',
+                                backgroundSize: effRunStatus === 'RUNNING' ? '200% 100%' : 'auto'
+                            }}
+                        />
+                    );
+                })()}
             </div>
 
             {/* Tree Content */}
