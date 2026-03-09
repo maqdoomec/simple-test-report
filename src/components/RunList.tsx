@@ -6,9 +6,6 @@ import { getEffectiveStatus } from '../utils';
 interface RunListProps {
     runs: RunNode[];
     testCases: TestCaseNode[];
-    processes: ProcessNode[];
-    subProcesses: SubProcessNode[];
-    validations: ValidationItem[];
     statusMap: Map<string, string>;
     selectedRunId: string | null;
     setSelectedRunId: (id: string) => void;
@@ -17,7 +14,7 @@ interface RunListProps {
     toggleCollapse: () => void;
 }
 
-const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, validations, statusMap, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
+const RunList: FC<RunListProps> = ({ runs, testCases, statusMap, selectedRunId, setSelectedRunId, calcRunProgress, isCollapsed, toggleCollapse }) => {
     const [searchValue, setSearchValue] = useState("");
     const [activeFilter, setActiveFilter] = useState("ALL");
 
@@ -52,7 +49,7 @@ const RunList: FC<RunListProps> = ({ runs, testCases, processes, subProcesses, v
         });
         testCases.forEach(tc => {
             if (stats[tc.run_id]) {
-                const effStatus = statusMap.get(tc.testcase_id) || tc.status;
+                const effStatus = statusMap.get(`${tc.run_id}:${tc.testcase_id}`) || tc.status;
 
                 stats[tc.run_id].total++;
                 if (effStatus === 'PASS') stats[tc.run_id].pass++;

@@ -47,7 +47,6 @@ interface ProcessTreeProps {
     testCases: TestCaseNode[];
     processes: ProcessNode[];
     subProcesses: SubProcessNode[];
-    validations: ValidationItem[];
     statusMap: Map<string, string>;
     selectedNode: SelectedNode;
     setSelectedNode: (node: SelectedNode) => void;
@@ -62,7 +61,6 @@ const ProcessTree: FC<ProcessTreeProps> = ({
     testCases,
     processes,
     subProcesses,
-    validations,
     statusMap,
     selectedNode,
     setSelectedNode,
@@ -204,7 +202,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                     const hasChildren = tcProcs.length > 0;
 
                     // We use the centralized bottom-up statusMap
-                    const tcStatus = statusMap.get(tc.testcase_id) || tc.status;
+                    const tcStatus = statusMap.get(`${tc.run_id}:${tc.testcase_id}`) || tc.status;
 
                     return (
                         <div key={tcId} className="mb-2">
@@ -247,7 +245,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                         const procSps = subProcesses.filter(s => s.process_id === procId && s.testcase_id === tcId && s.run_id === run.run_id);
                                         const pHasChildren = procSps.length > 0;
 
-                                        const procStatus = statusMap.get(proc.process_id) || proc.status;
+                                        const procStatus = statusMap.get(`${proc.run_id}:${proc.process_id}`) || proc.status;
 
                                         return (
                                             <div key={procId} className="flex flex-col">
@@ -282,7 +280,7 @@ const ProcessTree: FC<ProcessTreeProps> = ({
                                                     <div className="ml-4 pl-2 border-l border-border-light/50 mt-0.5 flex flex-col gap-0.5">
                                                         {procSps.map(sp => {
                                                             const spId = sp.subprocess_id;
-                                                            const spStatus = statusMap.get(sp.subprocess_id) || sp.status;
+                                                            const spStatus = statusMap.get(`${sp.run_id}:${sp.subprocess_id}`) || sp.status;
                                                             return (
                                                                 <div
                                                                     key={spId}

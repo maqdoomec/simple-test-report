@@ -229,25 +229,25 @@ function App() {
 
     // Level 1: SubProcesses (Checks Validations)
     subProcesses.forEach(sp => {
-      const children = validations.filter(v => v.data.subprocess_id === sp.data.subprocess_id).map(v => v.data.status);
-      map.set(sp.data.subprocess_id, getEffectiveStatus(sp.data.status, children));
+      const children = validations.filter(v => v.data.run_id === sp.data.run_id && v.data.subprocess_id === sp.data.subprocess_id).map(v => v.data.status);
+      map.set(`${sp.data.run_id}:${sp.data.subprocess_id}`, getEffectiveStatus(sp.data.status, children));
     });
 
     // Level 3: Processes (Checks SubProcesses)
     processes.forEach(p => {
-      const children = subProcesses.filter(sp => sp.data.process_id === p.data.process_id).map(sp => map.get(sp.data.subprocess_id) as string);
-      map.set(p.data.process_id, getEffectiveStatus(p.data.status, children));
+      const children = subProcesses.filter(sp => sp.data.run_id === p.data.run_id && sp.data.process_id === p.data.process_id).map(sp => map.get(`${sp.data.run_id}:${sp.data.subprocess_id}`) as string);
+      map.set(`${p.data.run_id}:${p.data.process_id}`, getEffectiveStatus(p.data.status, children));
     });
 
     // Level 4: TestCases (Checks Processes)
     testCases.forEach(tc => {
-      const children = processes.filter(p => p.data.testcase_id === tc.data.testcase_id).map(p => map.get(p.data.process_id) as string);
-      map.set(tc.data.testcase_id, getEffectiveStatus(tc.data.status, children));
+      const children = processes.filter(p => p.data.run_id === tc.data.run_id && p.data.testcase_id === tc.data.testcase_id).map(p => map.get(`${p.data.run_id}:${p.data.process_id}`) as string);
+      map.set(`${tc.data.run_id}:${tc.data.testcase_id}`, getEffectiveStatus(tc.data.status, children));
     });
 
     // Level 5: Runs (Checks TestCases)
     runs.forEach(r => {
-      const children = testCases.filter(tc => tc.data.run_id === r.data.run_id).map(tc => map.get(tc.data.testcase_id) as string);
+      const children = testCases.filter(tc => tc.data.run_id === r.data.run_id).map(tc => map.get(`${tc.data.run_id}:${tc.data.testcase_id}`) as string);
       map.set(r.data.run_id, getEffectiveStatus(r.data.status, children));
     });
 
@@ -276,7 +276,7 @@ function App() {
     let finishedCount = 0;
 
     tcs.forEach(t => {
-      const eff = statusMap.get(t.data.testcase_id) || t.data.status;
+      const eff = statusMap.get(`${t.data.run_id}:${t.data.testcase_id}`) || t.data.status;
       if (eff === 'PASS' || eff === 'FAIL') {
         finishedCount++;
       }
@@ -418,9 +418,6 @@ function App() {
         <RunList
           runs={runs.map(r => r.data)}
           testCases={testCases.map(t => t.data)}
-          processes={processes.map(p => p.data)}
-          subProcesses={subProcesses.map(s => s.data)}
-          validations={validations.map(v => v.data)}
           statusMap={statusMap}
           selectedRunId={selectedRunId}
           setSelectedRunId={setSelectedRunId}
@@ -440,7 +437,6 @@ function App() {
           testCases={filteredTestCases}
           processes={filteredProcesses}
           subProcesses={filteredSubProcesses}
-          validations={validations.map(v => v.data)}
           statusMap={statusMap}
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
